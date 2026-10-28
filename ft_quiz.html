@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSS Quiz</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --correct: #22c55e;
+    --incorrect: #ef4444;
+    --border: #334155;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding-block: 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    margin: 0 0 4px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    margin: 0 0 20px;
+    font-size: 0.95rem;
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .progress {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+
+  .progress-bar {
+    height: 6px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.2s ease;
+  }
+
+  .question-text {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 16px;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    min-height: 44px;
+  }
+
+  .option:hover {
+    border-color: var(--accent);
+  }
+
+  .option input {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .option.selected {
+    border-color: var(--accent);
+    background: rgba(56, 189, 248, 0.08);
+  }
+
+  .nav-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  button {
+    font-size: 0.95rem;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    cursor: pointer;
+    min-height: 44px;
+  }
+
+  button.primary {
+    background: var(--accent);
+    color: #0f172a;
+    border-color: var(--accent);
+  }
+
+  button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .unanswered-warning {
+    color: var(--incorrect);
+    font-size: 0.85rem;
+    margin-top: 10px;
+  }
+
+  .score-headline {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0 0 4px;
+  }
+
+  .score-sub {
+    color: var(--muted);
+    margin: 0 0 20px;
+  }
+
+  .review-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+  }
+
+  .review-item .review-q {
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .review-line {
+    font-size: 0.9rem;
+    margin: 2px 0;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+
+  .tag.correct {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--correct);
+  }
+
+  .tag.incorrect {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--incorrect);
+  }
+
+  [hidden] { display: none !important; }
+
+  @media (max-width: 400px) {
+    .panel { padding: 16px; }
+    .question-text { font-size: 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CSS Quiz</h1>
+  <p class="subtitle" id="quiz-subtitle"></p>
+
+  <noscript>
+    <p style="color:#ef4444;">This quiz requires JavaScript to be enabled in your browser to run.</p>
+  </noscript>
+
+  <div class="panel">
+    <!-- Quiz view -->
+    <div id="quiz-view">
+      <div class="progress">
+        <span id="progress-label">Question 1 of 35</span>
+        <span id="answered-count">0 answered</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+
+      <p class="question-text" id="question-text"></p>
+      <div class="options" id="options-container"></div>
+
+      <div id="unanswered-warning" class="unanswered-warning" hidden></div>
+
+      <div class="nav-row">
+        <button id="prev-btn" type="button">Previous</button>
+        <button id="next-btn" type="button">Next</button>
+        <button id="submit-btn" class="primary" type="button" hidden>Submit</button>
+      </div>
+    </div>
+
+    <!-- Results view -->
+    <div id="results-view" hidden>
+      <p class="score-headline" id="score-headline"></p>
+      <p class="score-sub" id="score-sub"></p>
+      <div id="review-list"></div>
+      <button id="retake-btn" class="primary" type="button">Retake Quiz</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var QUESTIONS = [
+    { question: "Which property sets the space between an element's border and its content?", options: ["margin", "padding", "border-spacing", "outline"], correctIndex: 1 },
+    { question: "In the CSS box model, which property creates space outside an element's border, between it and neighboring elements?", options: ["padding", "margin", "gap", "inset"], correctIndex: 1 },
+    { question: "What does `box-sizing: border-box` include in an element's specified width?", options: ["Content only", "Content + padding", "Content + padding + border", "Content + padding + border + margin"], correctIndex: 2 },
+    { question: "Which selector targets an element with `class=\"card\"`?", options: ["#card", ".card", "card", "*card"], correctIndex: 1 },
+    { question: "Which selector has the highest specificity?", options: ["A type selector (e.g. `div`)", "A class selector (e.g. `.box`)", "An ID selector (e.g. `#box`)", "A universal selector (`*`)"], correctIndex: 2 },
+    { question: "What does the `>` combinator select in `ul > li`?", options: ["Any `li` descendant of `ul`", "Only direct child `li` elements of `ul`", "The `li` immediately after `ul`", "The sibling `li` of `ul`"], correctIndex: 1 },
+    { question: "What does the `+` combinator select in `h2 + p`?", options: ["Every `p` after an `h2`", "The `p` immediately following a sibling `h2`", "A `p` inside an `h2`", "An `h2` that contains a `p`"], correctIndex: 1 },
+    { question: "Which pseudo-class matches a link that has already been visited?", options: [":hover", ":active", ":visited", ":focus"], correctIndex: 2 },
+    { question: "Which pseudo-class selects the first child element of its parent, regardless of type?", options: [":first-of-type", ":first-child", ":nth-child(1)", "Both :first-child and :nth-child(1)"], correctIndex: 3 },
+    { question: "What does `::before` do?", options: ["Selects the element before the current one", "Inserts generated content before an element's actual content", "Applies styles before the page loads", "Selects the previous sibling"], correctIndex: 1 },
+    { question: "Which value of `position` removes an element from the normal document flow and positions it relative to its nearest positioned ancestor?", options: ["relative", "static", "absolute", "inherit"], correctIndex: 2 },
+    { question: "Which `position` value keeps an element positioned relative to its normal flow location, allowing use of `top`/`left`/etc. as offsets from there?", options: ["absolute", "relative", "fixed", "sticky"], correctIndex: 1 },
+    { question: "Which `position` value keeps an element fixed relative to the viewport even when the page scrolls?", options: ["sticky", "absolute", "fixed", "static"], correctIndex: 2 },
+    { question: "What does the `z-index` property control?", options: ["Horizontal stacking order", "The stacking order of positioned elements along the z-axis", "Element width in the box model", "Font layering in text"], correctIndex: 1 },
+    { question: "Which CSS property turns an element into a flex container?", options: ["display: flex", "position: flex", "flex: container", "layout: flex"], correctIndex: 0 },
+    { question: "In Flexbox, which property controls alignment of flex items along the main axis?", options: ["align-items", "justify-content", "align-content", "flex-direction"], correctIndex: 1 },
+    { question: "In Flexbox, which property controls alignment of flex items along the cross axis?", options: ["justify-content", "align-items", "flex-wrap", "order"], correctIndex: 1 },
+    { question: "What does `flex: 1` on a flex item shorthand set (in the common one-value form)?", options: ["flex-basis only", "flex-grow only", "flex-grow: 1, flex-shrink: 1, flex-basis: 0%", "flex-direction: row"], correctIndex: 2 },
+    { question: "Which Flexbox property reverses the visual order of flex items without changing the DOM order?", options: ["flex-wrap", "order", "flex-direction: row-reverse", "Both order and flex-direction: row-reverse can"], correctIndex: 3 },
+    { question: "Which CSS property turns an element into a grid container?", options: ["display: grid", "grid: container", "layout: grid", "position: grid"], correctIndex: 0 },
+    { question: "In CSS Grid, which property defines the number and size of columns?", options: ["grid-template-rows", "grid-template-columns", "grid-auto-flow", "grid-column"], correctIndex: 1 },
+    { question: "What does the `fr` unit represent in a CSS Grid track definition?", options: ["A fixed number of pixels", "A fraction of the remaining available space", "A percentage of the viewport", "A font-relative unit like em"], correctIndex: 1 },
+    { question: "Which property places a grid item across multiple columns, e.g. from column line 1 to 3?", options: ["grid-row: 1 / 3", "grid-column: 1 / 3", "grid-area: 1 / 3", "column-span: 1 / 3"], correctIndex: 1 },
+    { question: "Which unit is relative to the font-size of the root (`html`) element?", options: ["em", "rem", "vh", "%"], correctIndex: 1 },
+    { question: "Which unit is relative to the font-size of the element's parent?", options: ["rem", "em", "vw", "ch"], correctIndex: 1 },
+    { question: "What does `1vh` represent?", options: ["1% of the element's height", "1% of the viewport's height", "1% of the viewport's width", "1 pixel"], correctIndex: 1 },
+    { question: "What does `calc(100% - 20px)` do in CSS?", options: ["It's invalid syntax", "Computes a value mixing units, here 100% of the available space minus 20px", "Always evaluates to 80%", "Only works inside media queries"], correctIndex: 1 },
+    { question: "Which property sets the color of an element's text?", options: ["background-color", "color", "fill", "font-color"], correctIndex: 1 },
+    { question: "Which shorthand property can set an element's background color, image, position, size, and repeat behavior together?", options: ["background", "backdrop", "fill", "surface"], correctIndex: 0 },
+    { question: "Which property adds a drop shadow to an element's box (not its text)?", options: ["text-shadow", "box-shadow", "filter: shadow", "outline-shadow"], correctIndex: 1 },
+    { question: "Which property controls the space between lines of text within an element?", options: ["letter-spacing", "line-height", "word-spacing", "text-indent"], correctIndex: 1 },
+    { question: "Which value of `text-align` centers inline/text content within its container?", options: ["middle", "center", "justify", "inherit"], correctIndex: 1 },
+    { question: "Which CSS property is used to animate a property's change smoothly over time in response to a state change (like `:hover`)?", options: ["animation", "transition", "transform", "keyframes"], correctIndex: 1 },
+    { question: "Which @-rule lets you apply different styles depending on the viewport width (responsive design)?", options: ["@supports", "@media", "@font-face", "@keyframes"], correctIndex: 1 },
+    { question: "In a `transition: all 0.3s ease;` declaration, what does `0.3s` specify?", options: ["Delay before the transition starts", "The duration of the transition", "The number of times it repeats", "The easing curve"], correctIndex: 1 }
+  ];
+
+  var TOTAL = QUESTIONS.length;
+  var answers = {}; // questionIndex -> selected option index
+  var currentIndex = 0;
+
+  var subtitle = document.getElementById("quiz-subtitle");
+  var quizView = document.getElementById("quiz-view");
+  var resultsView = document.getElementById("results-view");
+  var progressLabel = document.getElementById("progress-label");
+  var answeredCount = document.getElementById("answered-count");
+  var progressFill = document.getElementById("progress-fill");
+  var questionText = document.getElementById("question-text");
+  var optionsContainer = document.getElementById("options-container");
+  var prevBtn = document.getElementById("prev-btn");
+  var nextBtn = document.getElementById("next-btn");
+  var submitBtn = document.getElementById("submit-btn");
+  var unansweredWarning = document.getElementById("unanswered-warning");
+  var scoreHeadline = document.getElementById("score-headline");
+  var scoreSub = document.getElementById("score-sub");
+  var reviewList = document.getElementById("review-list");
+  var retakeBtn = document.getElementById("retake-btn");
+
+  function answeredTotal() {
+    return Object.keys(answers).length;
+  }
+
+  function updateSelectedClasses() {
+    var labels = optionsContainer.querySelectorAll(".option");
+    labels.forEach(function (label, i) {
+      label.classList.toggle("selected", answers[currentIndex] === i);
+    });
+  }
+
+  function renderQuestion() {
+    unansweredWarning.hidden = true;
+    var q = QUESTIONS[currentIndex];
+
+    progressLabel.textContent = "Question " + (currentIndex + 1) + " of " + TOTAL;
+    answeredCount.textContent = answeredTotal() + " / " + TOTAL + " answered";
+    progressFill.style.width = (((currentIndex + 1) / TOTAL) * 100) + "%";
+
+    questionText.textContent = q.question;
+    optionsContainer.innerHTML = "";
+
+    q.options.forEach(function (optionText, i) {
+      var label = document.createElement("label");
+      label.className = "option" + (answers[currentIndex] === i ? " selected" : "");
+
+      var input = document.createElement("input");
+      input.type = "radio";
+      input.name = "q" + currentIndex;
+      input.value = String(i);
+      input.checked = answers[currentIndex] === i;
+      input.addEventListener("change", function () {
+        // Update selection state without a full re-render: rebuilding the whole
+        // options list on every click destroys and recreates the radio inputs,
+        // which drops keyboard focus mid arrow-key navigation between options.
+        answers[currentIndex] = i;
+        updateSelectedClasses();
+        answeredCount.textContent = answeredTotal() + " / " + TOTAL + " answered";
+      });
+
+      var span = document.createElement("span");
+      span.textContent = optionText;
+
+      label.appendChild(input);
+      label.appendChild(span);
+      optionsContainer.appendChild(label);
+    });
+
+    prevBtn.disabled = currentIndex === 0;
+    var isLast = currentIndex === TOTAL - 1;
+    nextBtn.hidden = isLast;
+    submitBtn.hidden = !isLast;
+  }
+
+  function goPrev() {
+    if (currentIndex > 0) {
+      currentIndex -= 1;
+      renderQuestion();
+    }
+  }
+
+  function goNext() {
+    if (currentIndex < TOTAL - 1) {
+      currentIndex += 1;
+      renderQuestion();
+    }
+  }
+
+  function findUnanswered() {
+    var missing = [];
+    for (var i = 0; i < TOTAL; i++) {
+      if (!(i in answers)) missing.push(i + 1);
+    }
+    return missing;
+  }
+
+  function submitQuiz() {
+    var missing = findUnanswered();
+    if (missing.length > 0) {
+      unansweredWarning.hidden = false;
+      unansweredWarning.textContent = "Please answer all questions before submitting. Missing: Q" + missing.join(", Q");
+      return;
+    }
+
+    var score = 0;
+    var breakdown = [];
+    for (var i = 0; i < TOTAL; i++) {
+      var q = QUESTIONS[i];
+      var selected = answers[i];
+      var isCorrect = selected === q.correctIndex;
+      if (isCorrect) score += 1;
+      breakdown.push({
+        question: q.question,
+        yourAnswer: q.options[selected],
+        correctAnswer: q.options[q.correctIndex],
+        isCorrect: isCorrect
+      });
+    }
+
+    renderResults(score, breakdown);
+  }
+
+  function renderResults(score, breakdown) {
+    quizView.hidden = true;
+    resultsView.hidden = false;
+
+    scoreHeadline.textContent = "Score: " + score + " / " + TOTAL;
+    var pct = Math.round((score / TOTAL) * 100);
+    scoreSub.textContent = pct + "% correct";
+
+    reviewList.innerHTML = "";
+    breakdown.forEach(function (item, i) {
+      var div = document.createElement("div");
+      div.className = "review-item";
+
+      var qLine = document.createElement("div");
+      qLine.className = "review-q";
+      qLine.textContent = (i + 1) + ". " + item.question;
+      div.appendChild(qLine);
+
+      var tag = document.createElement("span");
+      tag.className = "tag " + (item.isCorrect ? "correct" : "incorrect");
+      tag.textContent = item.isCorrect ? "✓ Correct" : "✗ Incorrect";
+
+      var yourLine = document.createElement("div");
+      yourLine.className = "review-line";
+      yourLine.appendChild(tag);
+      var yourText = document.createElement("span");
+      yourText.textContent = "Your answer: " + item.yourAnswer;
+      yourLine.appendChild(yourText);
+      div.appendChild(yourLine);
+
+      if (!item.isCorrect) {
+        var correctLine = document.createElement("div");
+        correctLine.className = "review-line";
+        correctLine.textContent = "Correct answer: " + item.correctAnswer;
+        div.appendChild(correctLine);
+      }
+
+      reviewList.appendChild(div);
+    });
+  }
+
+  function retake() {
+    answers = {};
+    currentIndex = 0;
+    resultsView.hidden = true;
+    quizView.hidden = false;
+    renderQuestion();
+  }
+
+  prevBtn.addEventListener("click", goPrev);
+  nextBtn.addEventListener("click", goNext);
+  submitBtn.addEventListener("click", submitQuiz);
+  retakeBtn.addEventListener("click", retake);
+
+  // Warn before an accidental reload/close wipes in-progress answers --
+  // there is no persistence by design, so a stray refresh mid-quiz would
+  // otherwise silently discard everything with no way to resume.
+  window.addEventListener("beforeunload", function (e) {
+    if (!quizView.hidden && answeredTotal() > 0) {
+      e.preventDefault();
+      e.returnValue = "";
+    }
+  });
+
+  subtitle.textContent = TOTAL + " questions on CSS fundamentals.";
+  renderQuestion();
+})();
+</script>
+</body>
+</html>
