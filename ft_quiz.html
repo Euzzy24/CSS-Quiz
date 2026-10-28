@@ -1,750 +1,1126 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CSS Quiz</title>
-<style>
-  :root {
-    --bg: #0f172a;
-    --panel: #1e293b;
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --accent: #38bdf8;
-    --correct: #22c55e;
-    --incorrect: #ef4444;
-    --border: #334155;
-  }
-
-  * { box-sizing: border-box; }
-
-  body {
-    margin: 0;
-    padding-block: 24px;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-    line-height: 1.5;
-  }
-
-  .wrap {
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 0 16px;
-  }
-
-  h1 {
-    font-size: 1.4rem;
-    margin: 0 0 4px;
-  }
-
-  .subtitle {
-    color: var(--muted);
-    margin: 0 0 20px;
-    font-size: 0.95rem;
-  }
-
-  .panel {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 20px;
-  }
-
-  .progress {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 14px;
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-
-  .progress-bar {
-    height: 6px;
-    background: var(--border);
-    border-radius: 999px;
-    overflow: hidden;
-    margin-bottom: 18px;
-  }
-
-  .progress-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    transition: width 0.2s ease;
-  }
-
-  .question-text {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin: 0 0 16px;
-  }
-
-  .options {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-
-  .option {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 12px 14px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    cursor: pointer;
-    min-height: 44px;
-  }
-
-  .option:hover {
-    border-color: var(--accent);
-  }
-
-  .option input {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-  }
-
-  .option.selected {
-    border-color: var(--accent);
-    background: rgba(56, 189, 248, 0.08);
-  }
-
-  .nav-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-  }
-
-  button {
-    font-size: 0.95rem;
-    font-weight: 600;
-    padding: 10px 18px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--panel);
-    color: var(--text);
-    cursor: pointer;
-    min-height: 44px;
-  }
-
-  button.primary {
-    background: var(--accent);
-    color: #0f172a;
-    border-color: var(--accent);
-  }
-
-  button:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .unanswered-warning {
-    color: var(--incorrect);
-    font-size: 0.85rem;
-    margin-top: 10px;
-  }
-
-  .score-headline {
-    font-size: 1.8rem;
-    font-weight: 700;
-    margin: 0 0 4px;
-  }
-
-  .score-sub {
-    color: var(--muted);
-    margin: 0 0 8px;
-  }
-
-  .save-status {
-    font-size: 0.82rem;
-    margin: 0 0 20px;
-    color: var(--muted);
-  }
-
-  .save-status.ok { color: var(--correct); }
-  .save-status.fail { color: var(--incorrect); }
-
-  .review-item {
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-  }
-
-  .review-item .review-q {
-    font-weight: 600;
-    margin-bottom: 6px;
-  }
-
-  .review-line {
-    font-size: 0.9rem;
-    margin: 2px 0;
-  }
-
-  .tag {
-    display: inline-block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    padding: 1px 6px;
-    border-radius: 4px;
-    margin-right: 6px;
-  }
-
-  .tag.correct {
-    background: rgba(34, 197, 94, 0.15);
-    color: var(--correct);
-  }
-
-  .tag.incorrect {
-    background: rgba(239, 68, 68, 0.15);
-    color: var(--incorrect);
-  }
-
-  .name-field {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
-
-  .name-field label {
-    font-size: 0.9rem;
-    color: var(--muted);
-  }
-
-  .name-field input[type="text"] {
-    font-size: 1rem;
-    padding: 12px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--text);
-    min-height: 44px;
-  }
-
-  .name-field input[type="text"]:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-
-  .code-badge {
-    display: inline-block;
-    font-size: 0.72rem;
-    font-weight: 700;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 2px 7px;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    background: rgba(56, 189, 248, 0.15);
-    color: var(--accent);
-  }
-
-  textarea.code-input {
-    width: 100%;
-    min-height: 90px;
-    resize: vertical;
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    padding: 12px 14px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--accent);
-    margin-bottom: 20px;
-  }
-
-  textarea.code-input:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 1px;
-  }
-
-  .code-hint {
-    font-size: 0.82rem;
-    color: var(--muted);
-    margin: -14px 0 16px;
-  }
-
-  pre.code-block {
-    margin: 4px 0;
-    padding: 8px 10px;
-    border-radius: 6px;
-    background: rgba(0, 0, 0, 0.25);
-    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
-    font-size: 0.85rem;
-    overflow-x: auto;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  [hidden] { display: none !important; }
-
-  @media (max-width: 400px) {
-    .panel { padding: 16px; }
-    .question-text { font-size: 1rem; }
-  }
-</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>CSS Quiz</h1>
-  <p class="subtitle" id="quiz-subtitle"></p>
-
-  <noscript>
-    <p style="color:#ef4444;">This quiz requires JavaScript to be enabled in your browser to run.</p>
-  </noscript>
-
-  <div class="panel">
-    <!-- Name view (shown first) -->
-    <div id="name-view">
-      <div class="name-field">
-        <label for="student-name">Your name</label>
-        <input type="text" id="student-name" autocomplete="name" maxlength="80" placeholder="e.g. Juan Dela Cruz">
-      </div>
-      <div class="nav-row">
-        <span></span>
-        <button id="start-btn" class="primary" type="button" disabled>Start Quiz</button>
-      </div>
-    </div>
-
-    <!-- Quiz view -->
-    <div id="quiz-view" hidden>
-      <div class="progress">
-        <span id="progress-label">Question 1 of 35</span>
-        <span id="answered-count">0 answered</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-bar-fill" id="progress-fill" style="width:0%"></div>
-      </div>
-
-      <p class="question-text" id="question-text"></p>
-      <div class="options" id="options-container"></div>
-
-      <div id="unanswered-warning" class="unanswered-warning" hidden></div>
-
-      <div class="nav-row">
-        <button id="prev-btn" type="button">Previous</button>
-        <button id="next-btn" type="button">Next</button>
-        <button id="submit-btn" class="primary" type="button" hidden>Submit</button>
-      </div>
-    </div>
-
-    <!-- Results view -->
-    <div id="results-view" hidden>
-      <p class="score-headline" id="score-headline"></p>
-      <p class="score-sub" id="score-sub"></p>
-      <p class="save-status" id="save-status"></p>
-      <div id="review-list"></div>
-      <button id="retake-btn" class="primary" type="button">Retake Quiz</button>
-    </div>
-  </div>
-</div>
-
-<script>
-(function () {
-  "use strict";
-
-  var QUESTIONS = [
-    // Topic 1: Selectors & specificity (7)
-    { question: "What kind of selector is `p { }`?", options: ["Type selector", "Class selector", "ID selector", "Universal selector"], correctIndex: 0 },
-    { question: "Which selector matches an element with `class=\"link\"`?", options: [".link", "#link", "link", "*link"], correctIndex: 0 },
-    { question: "Which selector matches the one element with `id=\"menu\"`?", options: [".menu", "#menu", "menu", "[menu]"], correctIndex: 1 },
-    { question: "In `#menu > li`, which `li` elements are matched, compared to `#menu li`?", options: ["Every `li` nested anywhere inside #menu, same as `#menu li`", "Only `li` elements that are direct children of #menu, not deeper descendants", "Only the first `li` inside #menu", "`li` elements that come right after #menu in the markup"], correctIndex: 1 },
-    { question: "In specificity scoring, how many points does an ID selector (e.g. `#menu`) contribute?", options: ["1", "10", "100", "1000"], correctIndex: 2 },
-    { question: "Two CSS rules have exactly the same specificity and both match the same element. Which one wins?", options: ["The one written first in the stylesheet", "The one with the longer selector", "The one written later in the stylesheet", "Neither applies -- the browser default is used"], correctIndex: 2 },
-    { question: "What overrides a rule regardless of specificity, even an ID selector?", options: ["Writing the selector in capital letters", "Adding `!important` to the declaration", "Using `*` in the selector", "Putting the rule at the top of the file"], correctIndex: 1 },
-
-    // Topic 2: Fonts, backgrounds, borders (7)
-    { question: "Which property sets which typeface text uses, with a comma-separated fallback list?", options: ["text-align", "font-family", "font-weight", "color"], correctIndex: 1 },
-    { question: "A font-size is set using `em`. What is that value relative to?", options: ["The viewport width", "The element's own previously computed size", "The font size of the parent element", "The screen's pixel density"], correctIndex: 2 },
-    { question: "Which `text-decoration` value is commonly used to remove the default underline from a link?", options: ["overline", "underline", "line-through", "none"], correctIndex: 3 },
-    { question: "Which `text-align` value stretches every line except the last to fill the full width, like a newspaper column?", options: ["center", "justify", "right", "stretch"], correctIndex: 1 },
-    { question: "By default, how does `background-image` fill an element's box?", options: ["It shows once, centered", "It repeats (tiles) to fill the whole box", "It stretches to exactly fit the box", "It only shows in the bottom-right corner"], correctIndex: 1 },
-    { question: "Which property controls whether a background image repeats horizontally, vertically, both, or not at all?", options: ["background-position", "background-size", "background-repeat", "background-attachment"], correctIndex: 2 },
-    { question: "Which pair of `border-style` values specifically make a border look pressed-in or raised using light/shadow shading?", options: ["solid and dashed", "dotted and double", "inset and outset", "none and hidden"], correctIndex: 2 },
-
-    // Topic 3: The box model (6)
-    { question: "In the box model, where does `padding` sit?", options: ["Outside the border, between the element and its neighbors", "Between the content and the border", "Between two sibling elements only", "Behind the margin"], correctIndex: 1 },
-    { question: "What does `margin` do?", options: ["Adds transparent space outside the border, between the element and its neighbors", "Adds space inside the border, around the content", "Sets the element's background color", "Draws a visible line around the element"], correctIndex: 0 },
-    { question: "With the default `box-sizing: content-box`, `width: 200px`, `padding: 20px` on all sides, and `border-width: 8px` on all sides -- how wide does the box actually render?", options: ["200px", "240px", "256px", "216px"], correctIndex: 2 },
-    { question: "What does `box-sizing: border-box` change about how `width` is interpreted?", options: ["Width now excludes padding and border (same as content-box)", "Width now includes padding and border, so the box stays exactly that wide", "Width is ignored completely", "Width becomes a percentage automatically"], correctIndex: 1 },
-    { question: "In the two-value shorthand `margin: 10px 40px;`, what do the two values mean?", options: ["Top/bottom get 10px, left/right get 40px", "Left/right get 10px, top/bottom get 40px", "All four sides alternate 10px then 40px", "10px is the border and 40px is the margin"], correctIndex: 0 },
-    { question: "How do you horizontally center a block element that has a fixed `width`, using only margin?", options: ["margin: center;", "margin: 0 auto;", "text-align: center; on the element itself", "float: center;"], correctIndex: 1 },
-
-    // Topic 4: Positioning & z-index (6)
-    { question: "With the default `position: static`, do `top` and `left` have any effect on the element?", options: ["Yes, they move it freely", "No -- static elements ignore top/left and stay in normal flow", "Only `top` works, not `left`", "They swap the element with its sibling"], correctIndex: 1 },
-    { question: "Which `position` value removes an element from the normal flow, with `top`/`left` measured from its nearest positioned ancestor?", options: ["static", "relative", "absolute", "inherit"], correctIndex: 2 },
-    { question: "An element has `position: relative` with no `top`/`left` set at all. Why is this commonly done?", options: ["To remove the element from the page entirely", "To make it the positioned ancestor that an absolutely positioned child will be measured from", "To force a line break before it", "It has no effect and is never useful"], correctIndex: 1 },
-    { question: "If no ancestor of an absolutely positioned element has a non-static `position`, what is it positioned relative to?", options: ["Its immediate parent, always", "The nearest scrollable ancestor", "The initial containing block (roughly the page/viewport)", "It isn't rendered at all"], correctIndex: 2 },
-    { question: "Element A has `z-index: 1`. Element B overlaps it with the default `z-index: auto`. Which one appears on top?", options: ["Element B, since z-index: auto beats any number", "Element A, since it has the higher stacking value", "Whichever has the taller height", "It's undefined and varies by browser"], correctIndex: 1 },
-    { question: "What is `position: fixed` measured relative to, so the element stays put even as the page scrolls?", options: ["Its parent element", "The nearest positioned ancestor", "The viewport", "The element directly above it in the HTML"], correctIndex: 2 },
-
-    // Topic 5: Float & clear (4)
-    { question: "What happens to text that follows a `float: left` element?", options: ["It disappears from the page", "It wraps around the right side of the floated element", "It moves below the floated element", "It overlaps the floated element exactly"], correctIndex: 1 },
-    { question: "What does `clear: both` do to an element?", options: ["Removes all of its margin and padding", "Moves it below any floated elements on either side", "Makes its background transparent", "Hides any floated siblings"], correctIndex: 1 },
-    { question: "A container's only children are floated elements, with nothing else inside it. What happens to the container's height by default?", options: ["It grows normally to fit the floats", "It collapses to near-zero height, since floats are taken out of normal flow", "It automatically gets a scrollbar", "It matches the tallest floated child exactly"], correctIndex: 1 },
-    { question: "What is a standard fix for a container collapsing around only its floated children?", options: ["Add `float: none` to the container itself", "Set `overflow` to something other than `visible` (e.g. `hidden`) on the container", "Delete the floated children", "Add `display: none` to the container"], correctIndex: 1 },
-
-    // Topic 6: Display, visibility & overflow (5)
-    { question: "Which `display` value causes `width` and `height` to be ignored on that element?", options: ["block", "inline-block", "inline", "flex"], correctIndex: 2 },
-    { question: "What's the key difference between `display: none` and `visibility: hidden`?", options: ["They behave identically", "display: none keeps its space reserved; visibility: hidden removes the space", "visibility: hidden keeps its space reserved; display: none removes it from the layout entirely", "Neither one affects layout at all"], correctIndex: 2 },
-    { question: "An element has `opacity: 0`. Does it still take up space in the page layout?", options: ["No, it's removed from layout like display: none", "Yes -- it's just fully transparent, its space is unchanged", "It becomes `position: absolute` automatically", "This is invalid CSS and is ignored"], correctIndex: 1 },
-    { question: "Which `overflow` value shows scrollbars only when the content actually doesn't fit the box?", options: ["visible", "hidden", "scroll", "auto"], correctIndex: 3 },
-    { question: "Which property keeps text on a single line instead of wrapping onto multiple lines?", options: ["overflow: hidden;", "white-space: nowrap;", "text-align: justify;", "display: inline;"], correctIndex: 1 },
-
-    // Code-input items (3): type your own CSS, auto-graded by pattern match
-    {
-      type: "code",
-      question: "Write a CSS selector that matches only <p> elements with class=\"intro\".",
-      patterns: [/^p\.intro$/i],
-      modelAnswer: "p.intro"
-    },
-    {
-      type: "code",
-      question: "Write the one CSS declaration that makes an element's specified width include its padding and border (not just the content).",
-      patterns: [/^box-sizing\s*:\s*border-box\s*;?$/i],
-      modelAnswer: "box-sizing: border-box;"
-    },
-    {
-      type: "code",
-      question: "Write the one CSS declaration that takes an element out of the normal document flow and pins it to the viewport, so it stays put when the page scrolls.",
-      patterns: [/^position\s*:\s*fixed\s*;?$/i],
-      modelAnswer: "position: fixed;"
-    }
-  ];
-
-  var TOTAL = QUESTIONS.length;
-  var CODE_COUNT = QUESTIONS.filter(function (q) { return q.type === "code"; }).length;
-  var answers = {}; // questionIndex -> selected option index (mcq) or typed string (code)
-  var currentIndex = 0;
-  var studentName = "";
-
-  var nameView = document.getElementById("name-view");
-  var studentNameInput = document.getElementById("student-name");
-  var startBtn = document.getElementById("start-btn");
-  var subtitle = document.getElementById("quiz-subtitle");
-  var quizView = document.getElementById("quiz-view");
-  var resultsView = document.getElementById("results-view");
-  var progressLabel = document.getElementById("progress-label");
-  var answeredCount = document.getElementById("answered-count");
-  var progressFill = document.getElementById("progress-fill");
-  var questionText = document.getElementById("question-text");
-  var optionsContainer = document.getElementById("options-container");
-  var prevBtn = document.getElementById("prev-btn");
-  var nextBtn = document.getElementById("next-btn");
-  var submitBtn = document.getElementById("submit-btn");
-  var unansweredWarning = document.getElementById("unanswered-warning");
-  var scoreHeadline = document.getElementById("score-headline");
-  var scoreSub = document.getElementById("score-sub");
-  var saveStatus = document.getElementById("save-status");
-  var reviewList = document.getElementById("review-list");
-  var retakeBtn = document.getElementById("retake-btn");
-
-  // Collapse runs of whitespace and trim, so stray spacing/newlines in a
-  // typed answer don't cause an otherwise-correct answer to be marked wrong.
-  function normalizeCode(s) {
-    return String(s == null ? "" : s).trim().replace(/\s+/g, " ");
-  }
-
-  function isAnswered(i) {
-    var q = QUESTIONS[i];
-    if (q.type === "code") {
-      return typeof answers[i] === "string" && normalizeCode(answers[i]).length > 0;
-    }
-    return i in answers;
-  }
-
-  function answeredTotal() {
-    var n = 0;
-    for (var i = 0; i < TOTAL; i++) {
-      if (isAnswered(i)) n += 1;
-    }
-    return n;
-  }
-
-  function updateSelectedClasses() {
-    var labels = optionsContainer.querySelectorAll(".option");
-    labels.forEach(function (label, i) {
-      label.classList.toggle("selected", answers[currentIndex] === i);
-    });
-  }
-
-  function renderQuestion() {
-    unansweredWarning.hidden = true;
-    var q = QUESTIONS[currentIndex];
-
-    progressLabel.textContent = "Question " + (currentIndex + 1) + " of " + TOTAL;
-    answeredCount.textContent = answeredTotal() + " / " + TOTAL + " answered";
-    progressFill.style.width = (((currentIndex + 1) / TOTAL) * 100) + "%";
-
-    questionText.textContent = q.question;
-    optionsContainer.innerHTML = "";
-
-    if (q.type === "code") {
-      var badge = document.createElement("span");
-      badge.className = "code-badge";
-      badge.textContent = "Write the code";
-      optionsContainer.appendChild(badge);
-
-      var textarea = document.createElement("textarea");
-      textarea.className = "code-input";
-      textarea.spellcheck = false;
-      textarea.setAttribute("autocapitalize", "off");
-      textarea.setAttribute("autocomplete", "off");
-      textarea.placeholder = "Type your CSS here...";
-      textarea.value = typeof answers[currentIndex] === "string" ? answers[currentIndex] : "";
-      textarea.addEventListener("input", function () {
-        answers[currentIndex] = textarea.value;
-        answeredCount.textContent = answeredTotal() + " / " + TOTAL + " answered";
-      });
-      optionsContainer.appendChild(textarea);
-
-      var hint = document.createElement("p");
-      hint.className = "code-hint";
-      hint.textContent = "Graded automatically -- minor spacing differences are fine, but keep the property/selector names and values exact.";
-      optionsContainer.appendChild(hint);
-    } else {
-      q.options.forEach(function (optionText, i) {
-        var label = document.createElement("label");
-        label.className = "option" + (answers[currentIndex] === i ? " selected" : "");
-
-        var input = document.createElement("input");
-        input.type = "radio";
-        input.name = "q" + currentIndex;
-        input.value = String(i);
-        input.checked = answers[currentIndex] === i;
-        input.addEventListener("change", function () {
-          // Update selection state without a full re-render: rebuilding the whole
-          // options list on every click destroys and recreates the radio inputs,
-          // which drops keyboard focus mid arrow-key navigation between options.
-          answers[currentIndex] = i;
-          updateSelectedClasses();
-          answeredCount.textContent = answeredTotal() + " / " + TOTAL + " answered";
-        });
-
-        var span = document.createElement("span");
-        span.textContent = optionText;
-
-        label.appendChild(input);
-        label.appendChild(span);
-        optionsContainer.appendChild(label);
-      });
-    }
-
-    prevBtn.disabled = currentIndex === 0;
-    var isLast = currentIndex === TOTAL - 1;
-    nextBtn.hidden = isLast;
-    submitBtn.hidden = !isLast;
-  }
-
-  function goPrev() {
-    if (currentIndex > 0) {
-      currentIndex -= 1;
-      renderQuestion();
-    }
-  }
-
-  function goNext() {
-    if (currentIndex < TOTAL - 1) {
-      currentIndex += 1;
-      renderQuestion();
-    }
-  }
-
-  function findUnanswered() {
-    var missing = [];
-    for (var i = 0; i < TOTAL; i++) {
-      if (!isAnswered(i)) missing.push(i + 1);
-    }
-    return missing;
-  }
-
-  function isCodeCorrect(q, typedValue) {
-    var normalized = normalizeCode(typedValue);
-    return q.patterns.some(function (pattern) { return pattern.test(normalized); });
-  }
-
-  // Best-effort save to the server's results database (see server.js /
-  // data/results.json). This never blocks or hides the locally-computed
-  // results screen -- if the save fails (e.g. the host is running a plain
-  // static file server instead of server.js), the student still sees their
-  // score, just with a note that it wasn't recorded for the teacher.
-  function saveResult(score, breakdown) {
-    saveStatus.className = "save-status";
-    saveStatus.textContent = "Saving result...";
-
-    fetch("/api/results", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: studentName, score: score, total: TOTAL, answers: breakdown })
-    })
-      .then(function (res) {
-        if (!res.ok) throw new Error("server responded " + res.status);
-        saveStatus.className = "save-status ok";
-        saveStatus.textContent = "Result saved for your teacher.";
-      })
-      .catch(function () {
-        saveStatus.className = "save-status fail";
-        saveStatus.textContent = "Could not save your result to the server (is server.js running?). Your score above is still accurate.";
-      });
-  }
-
-  function submitQuiz() {
-    var missing = findUnanswered();
-    if (missing.length > 0) {
-      unansweredWarning.hidden = false;
-      unansweredWarning.textContent = "Please answer all questions before submitting. Missing: Q" + missing.join(", Q");
-      return;
-    }
-
-    var score = 0;
-    var breakdown = [];
-    for (var i = 0; i < TOTAL; i++) {
-      var q = QUESTIONS[i];
-      if (q.type === "code") {
-        var typed = answers[i];
-        var codeCorrect = isCodeCorrect(q, typed);
-        if (codeCorrect) score += 1;
-        breakdown.push({
-          type: "code",
-          question: q.question,
-          yourAnswer: typed,
-          correctAnswer: q.modelAnswer,
-          isCorrect: codeCorrect
-        });
-      } else {
-        var selected = answers[i];
-        var isCorrect = selected === q.correctIndex;
-        if (isCorrect) score += 1;
-        breakdown.push({
-          type: "mcq",
-          question: q.question,
-          yourAnswer: q.options[selected],
-          correctAnswer: q.options[q.correctIndex],
-          isCorrect: isCorrect
-        });
-      }
-    }
-
-    renderResults(score, breakdown);
-  }
-
-  function renderResults(score, breakdown) {
-    quizView.hidden = true;
-    resultsView.hidden = false;
-
-    scoreHeadline.textContent = "Score: " + score + " / " + TOTAL;
-    var pct = Math.round((score / TOTAL) * 100);
-    scoreSub.textContent = (studentName ? studentName + " -- " : "") + pct + "% correct";
-    saveResult(score, breakdown);
-
-    reviewList.innerHTML = "";
-    breakdown.forEach(function (item, i) {
-      var div = document.createElement("div");
-      div.className = "review-item";
-
-      var qLine = document.createElement("div");
-      qLine.className = "review-q";
-      qLine.textContent = (i + 1) + ". " + item.question;
-      div.appendChild(qLine);
-
-      var tag = document.createElement("span");
-      tag.className = "tag " + (item.isCorrect ? "correct" : "incorrect");
-      tag.textContent = item.isCorrect ? "✓ Correct" : "✗ Incorrect";
-
-      var yourLine = document.createElement("div");
-      yourLine.className = "review-line";
-      yourLine.appendChild(tag);
-
-      if (item.type === "code") {
-        var yourLabel = document.createElement("span");
-        yourLabel.textContent = "Your code:";
-        yourLine.appendChild(yourLabel);
-        div.appendChild(yourLine);
-
-        var yourCode = document.createElement("pre");
-        yourCode.className = "code-block";
-        yourCode.textContent = item.yourAnswer && item.yourAnswer.trim() ? item.yourAnswer : "(blank)";
-        div.appendChild(yourCode);
-
-        if (!item.isCorrect) {
-          var exampleLabel = document.createElement("div");
-          exampleLabel.className = "review-line";
-          exampleLabel.textContent = "Example correct answer:";
-          div.appendChild(exampleLabel);
-
-          var exampleCode = document.createElement("pre");
-          exampleCode.className = "code-block";
-          exampleCode.textContent = item.correctAnswer;
-          div.appendChild(exampleCode);
-        }
-      } else {
-        var yourText = document.createElement("span");
-        yourText.textContent = "Your answer: " + item.yourAnswer;
-        yourLine.appendChild(yourText);
-        div.appendChild(yourLine);
-
-        if (!item.isCorrect) {
-          var correctLine = document.createElement("div");
-          correctLine.className = "review-line";
-          correctLine.textContent = "Correct answer: " + item.correctAnswer;
-          div.appendChild(correctLine);
-        }
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CSS Quiz</title>
+    <style>
+      :root {
+        --bg: #0f172a;
+        --panel: #1e293b;
+        --text: #e2e8f0;
+        --muted: #94a3b8;
+        --accent: #38bdf8;
+        --correct: #22c55e;
+        --incorrect: #ef4444;
+        --border: #334155;
       }
 
-      reviewList.appendChild(div);
-    });
-  }
+      * {
+        box-sizing: border-box;
+      }
 
-  function retake() {
-    answers = {};
-    currentIndex = 0;
-    saveStatus.className = "save-status";
-    saveStatus.textContent = "";
-    resultsView.hidden = true;
-    quizView.hidden = false;
-    renderQuestion();
-  }
+      body {
+        margin: 0;
+        padding-block: 24px;
+        background: var(--bg);
+        color: var(--text);
+        font-family:
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          Helvetica,
+          Arial,
+          sans-serif;
+        line-height: 1.5;
+      }
 
-  function startQuiz() {
-    var name = studentNameInput.value.trim();
-    if (!name) return;
-    studentName = name;
-    nameView.hidden = true;
-    quizView.hidden = false;
-    renderQuestion();
-  }
+      .wrap {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
 
-  studentNameInput.addEventListener("input", function () {
-    startBtn.disabled = studentNameInput.value.trim().length === 0;
-  });
-  studentNameInput.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && !startBtn.disabled) startQuiz();
-  });
-  startBtn.addEventListener("click", startQuiz);
+      h1 {
+        font-size: 1.4rem;
+        margin: 0 0 4px;
+      }
 
-  prevBtn.addEventListener("click", goPrev);
-  nextBtn.addEventListener("click", goNext);
-  submitBtn.addEventListener("click", submitQuiz);
-  retakeBtn.addEventListener("click", retake);
+      .subtitle {
+        color: var(--muted);
+        margin: 0 0 20px;
+        font-size: 0.95rem;
+      }
 
-  // Warn before an accidental reload/close wipes in-progress answers --
-  // there is no persistence by design, so a stray refresh mid-quiz would
-  // otherwise silently discard everything with no way to resume.
-  window.addEventListener("beforeunload", function (e) {
-    if (!quizView.hidden && answeredTotal() > 0) {
-      e.preventDefault();
-      e.returnValue = "";
-    }
-  });
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+      }
 
-  subtitle.textContent = TOTAL + " questions (" + CODE_COUNT + " of them code-writing) on selectors & specificity, fonts/backgrounds/borders, the box model, positioning & z-index, float & clear, and display/visibility/overflow.";
-})();
-</script>
-</body>
+      .progress {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      .progress-bar {
+        height: 6px;
+        background: var(--border);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 18px;
+      }
+
+      .progress-bar-fill {
+        height: 100%;
+        background: var(--accent);
+        transition: width 0.2s ease;
+      }
+
+      .question-text {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin: 0 0 16px;
+      }
+
+      .options {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .option {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        cursor: pointer;
+        min-height: 44px;
+      }
+
+      .option:hover {
+        border-color: var(--accent);
+      }
+
+      .option input {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
+
+      .option.selected {
+        border-color: var(--accent);
+        background: rgba(56, 189, 248, 0.08);
+      }
+
+      .nav-row {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      button {
+        font-size: 0.95rem;
+        font-weight: 600;
+        padding: 10px 18px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--text);
+        cursor: pointer;
+        min-height: 44px;
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: #0f172a;
+        border-color: var(--accent);
+      }
+
+      button:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+
+      .unanswered-warning {
+        color: var(--incorrect);
+        font-size: 0.85rem;
+        margin-top: 10px;
+      }
+
+      .score-headline {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0 0 4px;
+      }
+
+      .score-sub {
+        color: var(--muted);
+        margin: 0 0 8px;
+      }
+
+      .save-status {
+        font-size: 0.82rem;
+        margin: 0 0 20px;
+        color: var(--muted);
+      }
+
+      .save-status.ok {
+        color: var(--correct);
+      }
+      .save-status.fail {
+        color: var(--incorrect);
+      }
+
+      .review-item {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+      }
+
+      .review-item .review-q {
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+
+      .review-line {
+        font-size: 0.9rem;
+        margin: 2px 0;
+      }
+
+      .tag {
+        display: inline-block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        padding: 1px 6px;
+        border-radius: 4px;
+        margin-right: 6px;
+      }
+
+      .tag.correct {
+        background: rgba(34, 197, 94, 0.15);
+        color: var(--correct);
+      }
+
+      .tag.incorrect {
+        background: rgba(239, 68, 68, 0.15);
+        color: var(--incorrect);
+      }
+
+      .name-field {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+
+      .name-field label {
+        font-size: 0.9rem;
+        color: var(--muted);
+      }
+
+      .name-field input[type="text"] {
+        font-size: 1rem;
+        padding: 12px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--text);
+        min-height: 44px;
+      }
+
+      .name-field input[type="text"]:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      .code-badge {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        padding: 2px 7px;
+        border-radius: 4px;
+        margin-bottom: 10px;
+        background: rgba(56, 189, 248, 0.15);
+        color: var(--accent);
+      }
+
+      textarea.code-input {
+        width: 100%;
+        min-height: 90px;
+        resize: vertical;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        padding: 12px 14px;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg);
+        color: var(--accent);
+        margin-bottom: 20px;
+      }
+
+      textarea.code-input:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 1px;
+      }
+
+      .code-hint {
+        font-size: 0.82rem;
+        color: var(--muted);
+        margin: -14px 0 16px;
+      }
+
+      pre.code-block {
+        margin: 4px 0;
+        padding: 8px 10px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.25);
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 0.85rem;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      [hidden] {
+        display: none !important;
+      }
+
+      @media (max-width: 400px) {
+        .panel {
+          padding: 16px;
+        }
+        .question-text {
+          font-size: 1rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>CSS Quiz</h1>
+      <p class="subtitle" id="quiz-subtitle"></p>
+
+      <noscript>
+        <p style="color: #ef4444">
+          This quiz requires JavaScript to be enabled in your browser to run.
+        </p>
+      </noscript>
+
+      <div class="panel">
+        <!-- Name view (shown first) -->
+        <div id="name-view">
+          <div class="name-field">
+            <label for="student-name">Your name</label>
+            <input
+              type="text"
+              id="student-name"
+              autocomplete="name"
+              maxlength="80"
+              placeholder="e.g. Juan Dela Cruz"
+            />
+          </div>
+          <div class="nav-row">
+            <span></span>
+            <button id="start-btn" class="primary" type="button" disabled>
+              Start Quiz
+            </button>
+          </div>
+        </div>
+
+        <!-- Quiz view -->
+        <div id="quiz-view" hidden>
+          <div class="progress">
+            <span id="progress-label">Question 1 of 35</span>
+            <span id="answered-count">0 answered</span>
+          </div>
+          <div class="progress-bar">
+            <div
+              class="progress-bar-fill"
+              id="progress-fill"
+              style="width: 0%"
+            ></div>
+          </div>
+
+          <p class="question-text" id="question-text"></p>
+          <div class="options" id="options-container"></div>
+
+          <div id="unanswered-warning" class="unanswered-warning" hidden></div>
+
+          <div class="nav-row">
+            <button id="prev-btn" type="button">Previous</button>
+            <button id="next-btn" type="button">Next</button>
+            <button id="submit-btn" class="primary" type="button" hidden>
+              Submit
+            </button>
+          </div>
+        </div>
+
+        <!-- Results view -->
+        <div id="results-view" hidden>
+          <p class="score-headline" id="score-headline"></p>
+          <p class="score-sub" id="score-sub"></p>
+          <p class="save-status" id="save-status"></p>
+          <div id="review-list"></div>
+          <button id="retake-btn" class="primary" type="button">
+            Retake Quiz
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        "use strict";
+
+        var QUESTIONS = [
+          // Topic 1: Selectors & specificity (7)
+          {
+            question: "What kind of selector is `p { }`?",
+            options: [
+              "Type selector",
+              "Class selector",
+              "ID selector",
+              "Universal selector",
+            ],
+            correctIndex: 0,
+          },
+          {
+            question: 'Which selector matches an element with `class="link"`?',
+            options: [".link", "#link", "link", "*link"],
+            correctIndex: 0,
+          },
+          {
+            question:
+              'Which selector matches the one element with `id="menu"`?',
+            options: [".menu", "#menu", "menu", "[menu]"],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "In `#menu > li`, which `li` elements are matched, compared to `#menu li`?",
+            options: [
+              "Every `li` nested anywhere inside #menu, same as `#menu li`",
+              "Only `li` elements that are direct children of #menu, not deeper descendants",
+              "Only the first `li` inside #menu",
+              "`li` elements that come right after #menu in the markup",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "In specificity scoring, how many points does an ID selector (e.g. `#menu`) contribute?",
+            options: ["1", "10", "100", "1000"],
+            correctIndex: 2,
+          },
+          {
+            question:
+              "Two CSS rules have exactly the same specificity and both match the same element. Which one wins?",
+            options: [
+              "The one written first in the stylesheet",
+              "The one with the longer selector",
+              "The one written later in the stylesheet",
+              "Neither applies -- the browser default is used",
+            ],
+            correctIndex: 2,
+          },
+          {
+            question:
+              "What overrides a rule regardless of specificity, even an ID selector?",
+            options: [
+              "Writing the selector in capital letters",
+              "Adding `!important` to the declaration",
+              "Using `*` in the selector",
+              "Putting the rule at the top of the file",
+            ],
+            correctIndex: 1,
+          },
+
+          // Topic 2: Fonts, backgrounds, borders (7)
+          {
+            question:
+              "Which property sets which typeface text uses, with a comma-separated fallback list?",
+            options: ["text-align", "font-family", "font-weight", "color"],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "A font-size is set using `em`. What is that value relative to?",
+            options: [
+              "The viewport width",
+              "The element's own previously computed size",
+              "The font size of the parent element",
+              "The screen's pixel density",
+            ],
+            correctIndex: 2,
+          },
+          {
+            question:
+              "Which `text-decoration` value is commonly used to remove the default underline from a link?",
+            options: ["overline", "underline", "line-through", "none"],
+            correctIndex: 3,
+          },
+          {
+            question:
+              "Which `text-align` value stretches every line except the last to fill the full width, like a newspaper column?",
+            options: ["center", "justify", "right", "stretch"],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "By default, how does `background-image` fill an element's box?",
+            options: [
+              "It shows once, centered",
+              "It repeats (tiles) to fill the whole box",
+              "It stretches to exactly fit the box",
+              "It only shows in the bottom-right corner",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "Which property controls whether a background image repeats horizontally, vertically, both, or not at all?",
+            options: [
+              "background-position",
+              "background-size",
+              "background-repeat",
+              "background-attachment",
+            ],
+            correctIndex: 2,
+          },
+          {
+            question:
+              "Which pair of `border-style` values specifically make a border look pressed-in or raised using light/shadow shading?",
+            options: [
+              "solid and dashed",
+              "dotted and double",
+              "inset and outset",
+              "none and hidden",
+            ],
+            correctIndex: 2,
+          },
+
+          // Topic 3: The box model (6)
+          {
+            question: "In the box model, where does `padding` sit?",
+            options: [
+              "Outside the border, between the element and its neighbors",
+              "Between the content and the border",
+              "Between two sibling elements only",
+              "Behind the margin",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question: "What does `margin` do?",
+            options: [
+              "Adds transparent space outside the border, between the element and its neighbors",
+              "Adds space inside the border, around the content",
+              "Sets the element's background color",
+              "Draws a visible line around the element",
+            ],
+            correctIndex: 0,
+          },
+          {
+            question:
+              "With the default `box-sizing: content-box`, `width: 200px`, `padding: 20px` on all sides, and `border-width: 8px` on all sides -- how wide does the box actually render?",
+            options: ["200px", "240px", "256px", "216px"],
+            correctIndex: 2,
+          },
+          {
+            question:
+              "What does `box-sizing: border-box` change about how `width` is interpreted?",
+            options: [
+              "Width now excludes padding and border (same as content-box)",
+              "Width now includes padding and border, so the box stays exactly that wide",
+              "Width is ignored completely",
+              "Width becomes a percentage automatically",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "In the two-value shorthand `margin: 10px 40px;`, what do the two values mean?",
+            options: [
+              "Top/bottom get 10px, left/right get 40px",
+              "Left/right get 10px, top/bottom get 40px",
+              "All four sides alternate 10px then 40px",
+              "10px is the border and 40px is the margin",
+            ],
+            correctIndex: 0,
+          },
+          {
+            question:
+              "How do you horizontally center a block element that has a fixed `width`, using only margin?",
+            options: [
+              "margin: center;",
+              "margin: 0 auto;",
+              "text-align: center; on the element itself",
+              "float: center;",
+            ],
+            correctIndex: 1,
+          },
+
+          // Topic 4: Positioning & z-index (6)
+          {
+            question:
+              "With the default `position: static`, do `top` and `left` have any effect on the element?",
+            options: [
+              "Yes, they move it freely",
+              "No -- static elements ignore top/left and stay in normal flow",
+              "Only `top` works, not `left`",
+              "They swap the element with its sibling",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "Which `position` value removes an element from the normal flow, with `top`/`left` measured from its nearest positioned ancestor?",
+            options: ["static", "relative", "absolute", "inherit"],
+            correctIndex: 2,
+          },
+          {
+            question:
+              "An element has `position: relative` with no `top`/`left` set at all. Why is this commonly done?",
+            options: [
+              "To remove the element from the page entirely",
+              "To make it the positioned ancestor that an absolutely positioned child will be measured from",
+              "To force a line break before it",
+              "It has no effect and is never useful",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "If no ancestor of an absolutely positioned element has a non-static `position`, what is it positioned relative to?",
+            options: [
+              "Its immediate parent, always",
+              "The nearest scrollable ancestor",
+              "The initial containing block (roughly the page/viewport)",
+              "It isn't rendered at all",
+            ],
+            correctIndex: 2,
+          },
+          {
+            question:
+              "Element A has `z-index: 1`. Element B overlaps it with the default `z-index: auto`. Which one appears on top?",
+            options: [
+              "Element B, since z-index: auto beats any number",
+              "Element A, since it has the higher stacking value",
+              "Whichever has the taller height",
+              "It's undefined and varies by browser",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "What is `position: fixed` measured relative to, so the element stays put even as the page scrolls?",
+            options: [
+              "Its parent element",
+              "The nearest positioned ancestor",
+              "The viewport",
+              "The element directly above it in the HTML",
+            ],
+            correctIndex: 2,
+          },
+
+          // Topic 5: Float & clear (4)
+          {
+            question:
+              "What happens to text that follows a `float: left` element?",
+            options: [
+              "It disappears from the page",
+              "It wraps around the right side of the floated element",
+              "It moves below the floated element",
+              "It overlaps the floated element exactly",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question: "What does `clear: both` do to an element?",
+            options: [
+              "Removes all of its margin and padding",
+              "Moves it below any floated elements on either side",
+              "Makes its background transparent",
+              "Hides any floated siblings",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "A container's only children are floated elements, with nothing else inside it. What happens to the container's height by default?",
+            options: [
+              "It grows normally to fit the floats",
+              "It collapses to near-zero height, since floats are taken out of normal flow",
+              "It automatically gets a scrollbar",
+              "It matches the tallest floated child exactly",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "What is a standard fix for a container collapsing around only its floated children?",
+            options: [
+              "Add `float: none` to the container itself",
+              "Set `overflow` to something other than `visible` (e.g. `hidden`) on the container",
+              "Delete the floated children",
+              "Add `display: none` to the container",
+            ],
+            correctIndex: 1,
+          },
+
+          // Topic 6: Display, visibility & overflow (5)
+          {
+            question:
+              "Which `display` value causes `width` and `height` to be ignored on that element?",
+            options: ["block", "inline-block", "inline", "flex"],
+            correctIndex: 2,
+          },
+          {
+            question:
+              "What's the key difference between `display: none` and `visibility: hidden`?",
+            options: [
+              "They behave identically",
+              "display: none keeps its space reserved; visibility: hidden removes the space",
+              "visibility: hidden keeps its space reserved; display: none removes it from the layout entirely",
+              "Neither one affects layout at all",
+            ],
+            correctIndex: 2,
+          },
+          {
+            question:
+              "An element has `opacity: 0`. Does it still take up space in the page layout?",
+            options: [
+              "No, it's removed from layout like display: none",
+              "Yes -- it's just fully transparent, its space is unchanged",
+              "It becomes `position: absolute` automatically",
+              "This is invalid CSS and is ignored",
+            ],
+            correctIndex: 1,
+          },
+          {
+            question:
+              "Which `overflow` value shows scrollbars only when the content actually doesn't fit the box?",
+            options: ["visible", "hidden", "scroll", "auto"],
+            correctIndex: 3,
+          },
+          {
+            question:
+              "Which property keeps text on a single line instead of wrapping onto multiple lines?",
+            options: [
+              "overflow: hidden;",
+              "white-space: nowrap;",
+              "text-align: justify;",
+              "display: inline;",
+            ],
+            correctIndex: 1,
+          },
+
+          // Code-input items (3): type your own CSS, auto-graded by pattern match
+          {
+            type: "code",
+            question:
+              'Write a CSS selector that matches only <p> elements with class="intro".',
+            patterns: [/^p\.intro$/i],
+            modelAnswer: "p.intro",
+          },
+          {
+            type: "code",
+            question:
+              "Write the one CSS declaration that makes an element's specified width include its padding and border (not just the content).",
+            patterns: [/^box-sizing\s*:\s*border-box\s*;?$/i],
+            modelAnswer: "box-sizing: border-box;",
+          },
+          {
+            type: "code",
+            question:
+              "Write the one CSS declaration that takes an element out of the normal document flow and pins it to the viewport, so it stays put when the page scrolls.",
+            patterns: [/^position\s*:\s*fixed\s*;?$/i],
+            modelAnswer: "position: fixed;",
+          },
+        ];
+
+        var TOTAL = QUESTIONS.length;
+        var CODE_COUNT = QUESTIONS.filter(function (q) {
+          return q.type === "code";
+        }).length;
+        var OPTION_LETTERS = ["A", "B", "C", "D"];
+        var answers = {}; // questionIndex -> selected option index (mcq) or typed string (code)
+        var currentIndex = 0;
+        var studentName = "";
+
+        var nameView = document.getElementById("name-view");
+        var studentNameInput = document.getElementById("student-name");
+        var startBtn = document.getElementById("start-btn");
+        var subtitle = document.getElementById("quiz-subtitle");
+        var quizView = document.getElementById("quiz-view");
+        var resultsView = document.getElementById("results-view");
+        var progressLabel = document.getElementById("progress-label");
+        var answeredCount = document.getElementById("answered-count");
+        var progressFill = document.getElementById("progress-fill");
+        var questionText = document.getElementById("question-text");
+        var optionsContainer = document.getElementById("options-container");
+        var prevBtn = document.getElementById("prev-btn");
+        var nextBtn = document.getElementById("next-btn");
+        var submitBtn = document.getElementById("submit-btn");
+        var unansweredWarning = document.getElementById("unanswered-warning");
+        var scoreHeadline = document.getElementById("score-headline");
+        var scoreSub = document.getElementById("score-sub");
+        var saveStatus = document.getElementById("save-status");
+        var reviewList = document.getElementById("review-list");
+        var retakeBtn = document.getElementById("retake-btn");
+
+        // Collapse runs of whitespace and trim, so stray spacing/newlines in a
+        // typed answer don't cause an otherwise-correct answer to be marked wrong.
+        function normalizeCode(s) {
+          return String(s == null ? "" : s)
+            .trim()
+            .replace(/\s+/g, " ");
+        }
+
+        function isAnswered(i) {
+          var q = QUESTIONS[i];
+          if (q.type === "code") {
+            return (
+              typeof answers[i] === "string" &&
+              normalizeCode(answers[i]).length > 0
+            );
+          }
+          return i in answers;
+        }
+
+        function answeredTotal() {
+          var n = 0;
+          for (var i = 0; i < TOTAL; i++) {
+            if (isAnswered(i)) n += 1;
+          }
+          return n;
+        }
+
+        function updateSelectedClasses() {
+          var labels = optionsContainer.querySelectorAll(".option");
+          labels.forEach(function (label, i) {
+            label.classList.toggle("selected", answers[currentIndex] === i);
+          });
+        }
+
+        function renderQuestion() {
+          unansweredWarning.hidden = true;
+          var q = QUESTIONS[currentIndex];
+
+          progressLabel.textContent =
+            "Question " + (currentIndex + 1) + " of " + TOTAL;
+          answeredCount.textContent =
+            answeredTotal() + " / " + TOTAL + " answered";
+          progressFill.style.width = ((currentIndex + 1) / TOTAL) * 100 + "%";
+
+          questionText.textContent = q.question;
+          optionsContainer.innerHTML = "";
+
+          if (q.type === "code") {
+            var badge = document.createElement("span");
+            badge.className = "code-badge";
+            badge.textContent = "Write the code";
+            optionsContainer.appendChild(badge);
+
+            var textarea = document.createElement("textarea");
+            textarea.className = "code-input";
+            textarea.spellcheck = false;
+            textarea.setAttribute("autocapitalize", "off");
+            textarea.setAttribute("autocomplete", "off");
+            textarea.placeholder = "Type your CSS here...";
+            textarea.value =
+              typeof answers[currentIndex] === "string"
+                ? answers[currentIndex]
+                : "";
+            textarea.addEventListener("input", function () {
+              answers[currentIndex] = textarea.value;
+              answeredCount.textContent =
+                answeredTotal() + " / " + TOTAL + " answered";
+            });
+            optionsContainer.appendChild(textarea);
+
+            var hint = document.createElement("p");
+            hint.className = "code-hint";
+            hint.textContent =
+              "Graded automatically -- minor spacing differences are fine, but keep the property/selector names and values exact.";
+            optionsContainer.appendChild(hint);
+          } else {
+            q.options.forEach(function (optionText, i) {
+              var label = document.createElement("label");
+              label.className =
+                "option" + (answers[currentIndex] === i ? " selected" : "");
+
+              var input = document.createElement("input");
+              input.type = "radio";
+              input.name = "q" + currentIndex;
+              input.value = String(i);
+              input.checked = answers[currentIndex] === i;
+              input.addEventListener("change", function () {
+                // Update selection state without a full re-render: rebuilding the whole
+                // options list on every click destroys and recreates the radio inputs,
+                // which drops keyboard focus mid arrow-key navigation between options.
+                answers[currentIndex] = i;
+                updateSelectedClasses();
+                answeredCount.textContent =
+                  answeredTotal() + " / " + TOTAL + " answered";
+              });
+
+              var span = document.createElement("span");
+              span.textContent = OPTION_LETTERS[i] + ". " + optionText;
+
+              label.appendChild(input);
+              label.appendChild(span);
+              optionsContainer.appendChild(label);
+            });
+          }
+
+          prevBtn.disabled = currentIndex === 0;
+          var isLast = currentIndex === TOTAL - 1;
+          nextBtn.hidden = isLast;
+          submitBtn.hidden = !isLast;
+        }
+
+        function goPrev() {
+          if (currentIndex > 0) {
+            currentIndex -= 1;
+            renderQuestion();
+          }
+        }
+
+        function goNext() {
+          if (currentIndex < TOTAL - 1) {
+            currentIndex += 1;
+            renderQuestion();
+          }
+        }
+
+        function findUnanswered() {
+          var missing = [];
+          for (var i = 0; i < TOTAL; i++) {
+            if (!isAnswered(i)) missing.push(i + 1);
+          }
+          return missing;
+        }
+
+        function isCodeCorrect(q, typedValue) {
+          var normalized = normalizeCode(typedValue);
+          return q.patterns.some(function (pattern) {
+            return pattern.test(normalized);
+          });
+        }
+
+        // Best-effort save to the server's results database (see server.js /
+        // data/results.json). This never blocks or hides the locally-computed
+        // results screen -- if the save fails (e.g. the host is running a plain
+        // static file server instead of server.js), the student still sees their
+        // score, just with a note that it wasn't recorded for the teacher.
+        function saveResult(score, breakdown) {
+          saveStatus.className = "save-status";
+          saveStatus.textContent = "Saving result...";
+
+          fetch("/api/results", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: studentName,
+              score: score,
+              total: TOTAL,
+              answers: breakdown,
+            }),
+          })
+            .then(function (res) {
+              if (!res.ok) throw new Error("server responded " + res.status);
+              saveStatus.className = "save-status ok";
+              saveStatus.textContent = "Result saved for your teacher.";
+            })
+            .catch(function () {
+              saveStatus.className = "save-status fail";
+              saveStatus.textContent =
+                "Could not save your result to the server (is server.js running?). Your score above is still accurate.";
+            });
+        }
+
+        function submitQuiz() {
+          var missing = findUnanswered();
+          if (missing.length > 0) {
+            unansweredWarning.hidden = false;
+            unansweredWarning.textContent =
+              "Please answer all questions before submitting. Missing: Q" +
+              missing.join(", Q");
+            return;
+          }
+
+          var score = 0;
+          var breakdown = [];
+          for (var i = 0; i < TOTAL; i++) {
+            var q = QUESTIONS[i];
+            if (q.type === "code") {
+              var typed = answers[i];
+              var codeCorrect = isCodeCorrect(q, typed);
+              if (codeCorrect) score += 1;
+              breakdown.push({
+                type: "code",
+                question: q.question,
+                yourAnswer: typed,
+                correctAnswer: q.modelAnswer,
+                isCorrect: codeCorrect,
+              });
+            } else {
+              var selected = answers[i];
+              var isCorrect = selected === q.correctIndex;
+              if (isCorrect) score += 1;
+              breakdown.push({
+                type: "mcq",
+                question: q.question,
+                yourAnswer:
+                  OPTION_LETTERS[selected] + ". " + q.options[selected],
+                correctAnswer:
+                  OPTION_LETTERS[q.correctIndex] +
+                  ". " +
+                  q.options[q.correctIndex],
+                isCorrect: isCorrect,
+              });
+            }
+          }
+
+          renderResults(score, breakdown);
+        }
+
+        function renderResults(score, breakdown) {
+          quizView.hidden = true;
+          resultsView.hidden = false;
+
+          scoreHeadline.textContent = "Score: " + score + " / " + TOTAL;
+          var pct = Math.round((score / TOTAL) * 100);
+          scoreSub.textContent =
+            (studentName ? studentName + " -- " : "") + pct + "% correct";
+          saveResult(score, breakdown);
+
+          reviewList.innerHTML = "";
+          breakdown.forEach(function (item, i) {
+            var div = document.createElement("div");
+            div.className = "review-item";
+
+            var qLine = document.createElement("div");
+            qLine.className = "review-q";
+            qLine.textContent = i + 1 + ". " + item.question;
+            div.appendChild(qLine);
+
+            var tag = document.createElement("span");
+            tag.className = "tag " + (item.isCorrect ? "correct" : "incorrect");
+            tag.textContent = item.isCorrect ? "✓ Correct" : "✗ Incorrect";
+
+            var yourLine = document.createElement("div");
+            yourLine.className = "review-line";
+            yourLine.appendChild(tag);
+
+            if (item.type === "code") {
+              var yourLabel = document.createElement("span");
+              yourLabel.textContent = "Your code:";
+              yourLine.appendChild(yourLabel);
+              div.appendChild(yourLine);
+
+              var yourCode = document.createElement("pre");
+              yourCode.className = "code-block";
+              yourCode.textContent =
+                item.yourAnswer && item.yourAnswer.trim()
+                  ? item.yourAnswer
+                  : "(blank)";
+              div.appendChild(yourCode);
+
+              if (!item.isCorrect) {
+                var exampleLabel = document.createElement("div");
+                exampleLabel.className = "review-line";
+                exampleLabel.textContent = "Example correct answer:";
+                div.appendChild(exampleLabel);
+
+                var exampleCode = document.createElement("pre");
+                exampleCode.className = "code-block";
+                exampleCode.textContent = item.correctAnswer;
+                div.appendChild(exampleCode);
+              }
+            } else {
+              var yourText = document.createElement("span");
+              yourText.textContent = "Your answer: " + item.yourAnswer;
+              yourLine.appendChild(yourText);
+              div.appendChild(yourLine);
+
+              if (!item.isCorrect) {
+                var correctLine = document.createElement("div");
+                correctLine.className = "review-line";
+                correctLine.textContent =
+                  "Correct answer: " + item.correctAnswer;
+                div.appendChild(correctLine);
+              }
+            }
+
+            reviewList.appendChild(div);
+          });
+        }
+
+        function retake() {
+          answers = {};
+          currentIndex = 0;
+          saveStatus.className = "save-status";
+          saveStatus.textContent = "";
+          resultsView.hidden = true;
+          quizView.hidden = false;
+          renderQuestion();
+        }
+
+        function startQuiz() {
+          var name = studentNameInput.value.trim();
+          if (!name) return;
+          studentName = name;
+          nameView.hidden = true;
+          quizView.hidden = false;
+          renderQuestion();
+        }
+
+        studentNameInput.addEventListener("input", function () {
+          startBtn.disabled = studentNameInput.value.trim().length === 0;
+        });
+        studentNameInput.addEventListener("keydown", function (e) {
+          if (e.key === "Enter" && !startBtn.disabled) startQuiz();
+        });
+        startBtn.addEventListener("click", startQuiz);
+
+        prevBtn.addEventListener("click", goPrev);
+        nextBtn.addEventListener("click", goNext);
+        submitBtn.addEventListener("click", submitQuiz);
+        retakeBtn.addEventListener("click", retake);
+
+        // Warn before an accidental reload/close wipes in-progress answers --
+        // there is no persistence by design, so a stray refresh mid-quiz would
+        // otherwise silently discard everything with no way to resume.
+        window.addEventListener("beforeunload", function (e) {
+          if (!quizView.hidden && answeredTotal() > 0) {
+            e.preventDefault();
+            e.returnValue = "";
+          }
+        });
+
+        subtitle.textContent =
+          TOTAL +
+          " questions (" +
+          CODE_COUNT +
+          " of them code-writing) on selectors & specificity, fonts/backgrounds/borders, the box model, positioning & z-index, float & clear, and display/visibility/overflow.";
+      })();
+    </script>
+  </body>
 </html>

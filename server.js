@@ -90,7 +90,7 @@ function validateSubmission(body) {
 }
 
 // ---------- static file serving (path-traversal safe) ----------
-function serveStatic(req, res, urlPath) {
+function serveStatic(res, urlPath) {
   var relPath = urlPath === "/" ? "ft_quiz.html" : decodeURIComponent(urlPath.replace(/^\/+/, ""));
   var fullPath = path.normalize(path.join(ROOT, relPath));
 
@@ -190,7 +190,7 @@ var server = http.createServer(function (req, res) {
   }
 
   if (req.method === "GET") {
-    serveStatic(req, res, urlPath);
+    serveStatic(res, urlPath);
     return;
   }
 
