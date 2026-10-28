@@ -195,6 +195,84 @@
     color: var(--incorrect);
   }
 
+  .name-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .name-field label {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .name-field input[type="text"] {
+    font-size: 1rem;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 44px;
+  }
+
+  .name-field input[type="text"]:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .code-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    background: rgba(56, 189, 248, 0.15);
+    color: var(--accent);
+  }
+
+  textarea.code-input {
+    width: 100%;
+    min-height: 90px;
+    resize: vertical;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--accent);
+    margin-bottom: 20px;
+  }
+
+  textarea.code-input:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .code-hint {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: -14px 0 16px;
+  }
+
+  pre.code-block {
+    margin: 4px 0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.25);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.85rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
   [hidden] { display: none !important; }
 
   @media (max-width: 400px) {
@@ -213,8 +291,20 @@
   </noscript>
 
   <div class="panel">
+    <!-- Name view (shown first) -->
+    <div id="name-view">
+      <div class="name-field">
+        <label for="student-name">Your name</label>
+        <input type="text" id="student-name" autocomplete="name" maxlength="80" placeholder="e.g. Juan Dela Cruz">
+      </div>
+      <div class="nav-row">
+        <span></span>
+        <button id="start-btn" class="primary" type="button" disabled>Start Quiz</button>
+      </div>
+    </div>
+
     <!-- Quiz view -->
-    <div id="quiz-view">
+    <div id="quiz-view" hidden>
       <div class="progress">
         <span id="progress-label">Question 1 of 35</span>
         <span id="answered-count">0 answered</span>
@@ -295,13 +385,38 @@
     { question: "What's the key difference between `display: none` and `visibility: hidden`?", options: ["They behave identically", "display: none keeps its space reserved; visibility: hidden removes the space", "visibility: hidden keeps its space reserved; display: none removes it from the layout entirely", "Neither one affects layout at all"], correctIndex: 2 },
     { question: "An element has `opacity: 0`. Does it still take up space in the page layout?", options: ["No, it's removed from layout like display: none", "Yes -- it's just fully transparent, its space is unchanged", "It becomes `position: absolute` automatically", "This is invalid CSS and is ignored"], correctIndex: 1 },
     { question: "Which `overflow` value shows scrollbars only when the content actually doesn't fit the box?", options: ["visible", "hidden", "scroll", "auto"], correctIndex: 3 },
-    { question: "Which property keeps text on a single line instead of wrapping onto multiple lines?", options: ["overflow: hidden;", "white-space: nowrap;", "text-align: justify;", "display: inline;"], correctIndex: 1 }
+    { question: "Which property keeps text on a single line instead of wrapping onto multiple lines?", options: ["overflow: hidden;", "white-space: nowrap;", "text-align: justify;", "display: inline;"], correctIndex: 1 },
+
+    // Code-input items (3): type your own CSS, auto-graded by pattern match
+    {
+      type: "code",
+      question: "Write a CSS selector that matches only <p> elements with class=\"intro\".",
+      patterns: [/^p\.intro$/i],
+      modelAnswer: "p.intro"
+    },
+    {
+      type: "code",
+      question: "Write the one CSS declaration that makes an element's specified width include its padding and border (not just the content).",
+      patterns: [/^box-sizing\s*:\s*border-box\s*;?$/i],
+      modelAnswer: "box-sizing: border-box;"
+    },
+    {
+      type: "code",
+      question: "Write the one CSS declaration that takes an element out of the normal document flow and pins it to the viewport, so it stays put when the page scrolls.",
+      patterns: [/^position\s*:\s*fixed\s*;?$/i],
+      modelAnswer: "position: fixed;"
+    }
   ];
 
   var TOTAL = QUESTIONS.length;
-  var answers = {}; // questionIndex -> selected option index
+  var CODE_COUNT = QUESTIONS.filter(function (q) { return q.type === "code"; }).length;
+  var answers = {}; // questionIndex -> selected option index (mcq) or typed string (code)
   var currentIndex = 0;
+  var studentName = "";
 
+  var nameView = document.getElementById("name-view");
+  var studentNameInput = document.getElementById("student-name");
+  var startBtn = document.getElementById("start-btn");
   var subtitle = document.getElementById("quiz-subtitle");
   var quizView = document.getElementById("quiz-view");
   var resultsView = document.getElementById("results-view");
@@ -319,8 +434,26 @@
   var reviewList = document.getElementById("review-list");
   var retakeBtn = document.getElementById("retake-btn");
 
+  // Collapse runs of whitespace and trim, so stray spacing/newlines in a
+  // typed answer don't cause an otherwise-correct answer to be marked wrong.
+  function normalizeCode(s) {
+    return String(s == null ? "" : s).trim().replace(/\s+/g, " ");
+  }
+
+  function isAnswered(i) {
+    var q = QUESTIONS[i];
+    if (q.type === "code") {
+      return typeof answers[i] === "string" && normalizeCode(answers[i]).length > 0;
+    }
+    return i in answers;
+  }
+
   function answeredTotal() {
-    return Object.keys(answers).length;
+    var n = 0;
+    for (var i = 0; i < TOTAL; i++) {
+      if (isAnswered(i)) n += 1;
+    }
+    return n;
   }
 
   function updateSelectedClasses() {
@@ -341,31 +474,56 @@
     questionText.textContent = q.question;
     optionsContainer.innerHTML = "";
 
-    q.options.forEach(function (optionText, i) {
-      var label = document.createElement("label");
-      label.className = "option" + (answers[currentIndex] === i ? " selected" : "");
+    if (q.type === "code") {
+      var badge = document.createElement("span");
+      badge.className = "code-badge";
+      badge.textContent = "Write the code";
+      optionsContainer.appendChild(badge);
 
-      var input = document.createElement("input");
-      input.type = "radio";
-      input.name = "q" + currentIndex;
-      input.value = String(i);
-      input.checked = answers[currentIndex] === i;
-      input.addEventListener("change", function () {
-        // Update selection state without a full re-render: rebuilding the whole
-        // options list on every click destroys and recreates the radio inputs,
-        // which drops keyboard focus mid arrow-key navigation between options.
-        answers[currentIndex] = i;
-        updateSelectedClasses();
+      var textarea = document.createElement("textarea");
+      textarea.className = "code-input";
+      textarea.spellcheck = false;
+      textarea.setAttribute("autocapitalize", "off");
+      textarea.setAttribute("autocomplete", "off");
+      textarea.placeholder = "Type your CSS here...";
+      textarea.value = typeof answers[currentIndex] === "string" ? answers[currentIndex] : "";
+      textarea.addEventListener("input", function () {
+        answers[currentIndex] = textarea.value;
         answeredCount.textContent = answeredTotal() + " / " + TOTAL + " answered";
       });
+      optionsContainer.appendChild(textarea);
 
-      var span = document.createElement("span");
-      span.textContent = optionText;
+      var hint = document.createElement("p");
+      hint.className = "code-hint";
+      hint.textContent = "Graded automatically -- minor spacing differences are fine, but keep the property/selector names and values exact.";
+      optionsContainer.appendChild(hint);
+    } else {
+      q.options.forEach(function (optionText, i) {
+        var label = document.createElement("label");
+        label.className = "option" + (answers[currentIndex] === i ? " selected" : "");
 
-      label.appendChild(input);
-      label.appendChild(span);
-      optionsContainer.appendChild(label);
-    });
+        var input = document.createElement("input");
+        input.type = "radio";
+        input.name = "q" + currentIndex;
+        input.value = String(i);
+        input.checked = answers[currentIndex] === i;
+        input.addEventListener("change", function () {
+          // Update selection state without a full re-render: rebuilding the whole
+          // options list on every click destroys and recreates the radio inputs,
+          // which drops keyboard focus mid arrow-key navigation between options.
+          answers[currentIndex] = i;
+          updateSelectedClasses();
+          answeredCount.textContent = answeredTotal() + " / " + TOTAL + " answered";
+        });
+
+        var span = document.createElement("span");
+        span.textContent = optionText;
+
+        label.appendChild(input);
+        label.appendChild(span);
+        optionsContainer.appendChild(label);
+      });
+    }
 
     prevBtn.disabled = currentIndex === 0;
     var isLast = currentIndex === TOTAL - 1;
@@ -390,9 +548,14 @@
   function findUnanswered() {
     var missing = [];
     for (var i = 0; i < TOTAL; i++) {
-      if (!(i in answers)) missing.push(i + 1);
+      if (!isAnswered(i)) missing.push(i + 1);
     }
     return missing;
+  }
+
+  function isCodeCorrect(q, typedValue) {
+    var normalized = normalizeCode(typedValue);
+    return q.patterns.some(function (pattern) { return pattern.test(normalized); });
   }
 
   function submitQuiz() {
@@ -407,15 +570,29 @@
     var breakdown = [];
     for (var i = 0; i < TOTAL; i++) {
       var q = QUESTIONS[i];
-      var selected = answers[i];
-      var isCorrect = selected === q.correctIndex;
-      if (isCorrect) score += 1;
-      breakdown.push({
-        question: q.question,
-        yourAnswer: q.options[selected],
-        correctAnswer: q.options[q.correctIndex],
-        isCorrect: isCorrect
-      });
+      if (q.type === "code") {
+        var typed = answers[i];
+        var codeCorrect = isCodeCorrect(q, typed);
+        if (codeCorrect) score += 1;
+        breakdown.push({
+          type: "code",
+          question: q.question,
+          yourAnswer: typed,
+          correctAnswer: q.modelAnswer,
+          isCorrect: codeCorrect
+        });
+      } else {
+        var selected = answers[i];
+        var isCorrect = selected === q.correctIndex;
+        if (isCorrect) score += 1;
+        breakdown.push({
+          type: "mcq",
+          question: q.question,
+          yourAnswer: q.options[selected],
+          correctAnswer: q.options[q.correctIndex],
+          isCorrect: isCorrect
+        });
+      }
     }
 
     renderResults(score, breakdown);
@@ -427,7 +604,7 @@
 
     scoreHeadline.textContent = "Score: " + score + " / " + TOTAL;
     var pct = Math.round((score / TOTAL) * 100);
-    scoreSub.textContent = pct + "% correct";
+    scoreSub.textContent = (studentName ? studentName + " -- " : "") + pct + "% correct";
 
     reviewList.innerHTML = "";
     breakdown.forEach(function (item, i) {
@@ -446,16 +623,41 @@
       var yourLine = document.createElement("div");
       yourLine.className = "review-line";
       yourLine.appendChild(tag);
-      var yourText = document.createElement("span");
-      yourText.textContent = "Your answer: " + item.yourAnswer;
-      yourLine.appendChild(yourText);
-      div.appendChild(yourLine);
 
-      if (!item.isCorrect) {
-        var correctLine = document.createElement("div");
-        correctLine.className = "review-line";
-        correctLine.textContent = "Correct answer: " + item.correctAnswer;
-        div.appendChild(correctLine);
+      if (item.type === "code") {
+        var yourLabel = document.createElement("span");
+        yourLabel.textContent = "Your code:";
+        yourLine.appendChild(yourLabel);
+        div.appendChild(yourLine);
+
+        var yourCode = document.createElement("pre");
+        yourCode.className = "code-block";
+        yourCode.textContent = item.yourAnswer && item.yourAnswer.trim() ? item.yourAnswer : "(blank)";
+        div.appendChild(yourCode);
+
+        if (!item.isCorrect) {
+          var exampleLabel = document.createElement("div");
+          exampleLabel.className = "review-line";
+          exampleLabel.textContent = "Example correct answer:";
+          div.appendChild(exampleLabel);
+
+          var exampleCode = document.createElement("pre");
+          exampleCode.className = "code-block";
+          exampleCode.textContent = item.correctAnswer;
+          div.appendChild(exampleCode);
+        }
+      } else {
+        var yourText = document.createElement("span");
+        yourText.textContent = "Your answer: " + item.yourAnswer;
+        yourLine.appendChild(yourText);
+        div.appendChild(yourLine);
+
+        if (!item.isCorrect) {
+          var correctLine = document.createElement("div");
+          correctLine.className = "review-line";
+          correctLine.textContent = "Correct answer: " + item.correctAnswer;
+          div.appendChild(correctLine);
+        }
       }
 
       reviewList.appendChild(div);
@@ -469,6 +671,23 @@
     quizView.hidden = false;
     renderQuestion();
   }
+
+  function startQuiz() {
+    var name = studentNameInput.value.trim();
+    if (!name) return;
+    studentName = name;
+    nameView.hidden = true;
+    quizView.hidden = false;
+    renderQuestion();
+  }
+
+  studentNameInput.addEventListener("input", function () {
+    startBtn.disabled = studentNameInput.value.trim().length === 0;
+  });
+  studentNameInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !startBtn.disabled) startQuiz();
+  });
+  startBtn.addEventListener("click", startQuiz);
 
   prevBtn.addEventListener("click", goPrev);
   nextBtn.addEventListener("click", goNext);
@@ -485,8 +704,7 @@
     }
   });
 
-  subtitle.textContent = TOTAL + " questions on selectors & specificity, fonts/backgrounds/borders, the box model, positioning & z-index, float & clear, and display/visibility/overflow.";
-  renderQuestion();
+  subtitle.textContent = TOTAL + " questions (" + CODE_COUNT + " of them code-writing) on selectors & specificity, fonts/backgrounds/borders, the box model, positioning & z-index, float & clear, and display/visibility/overflow.";
 })();
 </script>
 </body>
