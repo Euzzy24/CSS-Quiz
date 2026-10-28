@@ -250,41 +250,52 @@
   "use strict";
 
   var QUESTIONS = [
-    { question: "Which property sets the space between an element's border and its content?", options: ["margin", "padding", "border-spacing", "outline"], correctIndex: 1 },
-    { question: "In the CSS box model, which property creates space outside an element's border, between it and neighboring elements?", options: ["padding", "margin", "gap", "inset"], correctIndex: 1 },
-    { question: "What does `box-sizing: border-box` include in an element's specified width?", options: ["Content only", "Content + padding", "Content + padding + border", "Content + padding + border + margin"], correctIndex: 2 },
-    { question: "Which selector targets an element with `class=\"card\"`?", options: ["#card", ".card", "card", "*card"], correctIndex: 1 },
-    { question: "Which selector has the highest specificity?", options: ["A type selector (e.g. `div`)", "A class selector (e.g. `.box`)", "An ID selector (e.g. `#box`)", "A universal selector (`*`)"], correctIndex: 2 },
-    { question: "What does the `>` combinator select in `ul > li`?", options: ["Any `li` descendant of `ul`", "Only direct child `li` elements of `ul`", "The `li` immediately after `ul`", "The sibling `li` of `ul`"], correctIndex: 1 },
-    { question: "What does the `+` combinator select in `h2 + p`?", options: ["Every `p` after an `h2`", "The `p` immediately following a sibling `h2`", "A `p` inside an `h2`", "An `h2` that contains a `p`"], correctIndex: 1 },
-    { question: "Which pseudo-class matches a link that has already been visited?", options: [":hover", ":active", ":visited", ":focus"], correctIndex: 2 },
-    { question: "Which pseudo-class selects the first child element of its parent, regardless of type?", options: [":first-of-type", ":first-child", ":nth-child(1)", "Both :first-child and :nth-child(1)"], correctIndex: 3 },
-    { question: "What does `::before` do?", options: ["Selects the element before the current one", "Inserts generated content before an element's actual content", "Applies styles before the page loads", "Selects the previous sibling"], correctIndex: 1 },
-    { question: "Which value of `position` removes an element from the normal document flow and positions it relative to its nearest positioned ancestor?", options: ["relative", "static", "absolute", "inherit"], correctIndex: 2 },
-    { question: "Which `position` value keeps an element positioned relative to its normal flow location, allowing use of `top`/`left`/etc. as offsets from there?", options: ["absolute", "relative", "fixed", "sticky"], correctIndex: 1 },
-    { question: "Which `position` value keeps an element fixed relative to the viewport even when the page scrolls?", options: ["sticky", "absolute", "fixed", "static"], correctIndex: 2 },
-    { question: "What does the `z-index` property control?", options: ["Horizontal stacking order", "The stacking order of positioned elements along the z-axis", "Element width in the box model", "Font layering in text"], correctIndex: 1 },
-    { question: "Which CSS property turns an element into a flex container?", options: ["display: flex", "position: flex", "flex: container", "layout: flex"], correctIndex: 0 },
-    { question: "In Flexbox, which property controls alignment of flex items along the main axis?", options: ["align-items", "justify-content", "align-content", "flex-direction"], correctIndex: 1 },
-    { question: "In Flexbox, which property controls alignment of flex items along the cross axis?", options: ["justify-content", "align-items", "flex-wrap", "order"], correctIndex: 1 },
-    { question: "What does `flex: 1` on a flex item shorthand set (in the common one-value form)?", options: ["flex-basis only", "flex-grow only", "flex-grow: 1, flex-shrink: 1, flex-basis: 0%", "flex-direction: row"], correctIndex: 2 },
-    { question: "Which Flexbox property reverses the visual order of flex items without changing the DOM order?", options: ["flex-wrap", "order", "flex-direction: row-reverse", "Both order and flex-direction: row-reverse can"], correctIndex: 3 },
-    { question: "Which CSS property turns an element into a grid container?", options: ["display: grid", "grid: container", "layout: grid", "position: grid"], correctIndex: 0 },
-    { question: "In CSS Grid, which property defines the number and size of columns?", options: ["grid-template-rows", "grid-template-columns", "grid-auto-flow", "grid-column"], correctIndex: 1 },
-    { question: "What does the `fr` unit represent in a CSS Grid track definition?", options: ["A fixed number of pixels", "A fraction of the remaining available space", "A percentage of the viewport", "A font-relative unit like em"], correctIndex: 1 },
-    { question: "Which property places a grid item across multiple columns, e.g. from column line 1 to 3?", options: ["grid-row: 1 / 3", "grid-column: 1 / 3", "grid-area: 1 / 3", "column-span: 1 / 3"], correctIndex: 1 },
-    { question: "Which unit is relative to the font-size of the root (`html`) element?", options: ["em", "rem", "vh", "%"], correctIndex: 1 },
-    { question: "Which unit is relative to the font-size of the element's parent?", options: ["rem", "em", "vw", "ch"], correctIndex: 1 },
-    { question: "What does `1vh` represent?", options: ["1% of the element's height", "1% of the viewport's height", "1% of the viewport's width", "1 pixel"], correctIndex: 1 },
-    { question: "What does `calc(100% - 20px)` do in CSS?", options: ["It's invalid syntax", "Computes a value mixing units, here 100% of the available space minus 20px", "Always evaluates to 80%", "Only works inside media queries"], correctIndex: 1 },
-    { question: "Which property sets the color of an element's text?", options: ["background-color", "color", "fill", "font-color"], correctIndex: 1 },
-    { question: "Which shorthand property can set an element's background color, image, position, size, and repeat behavior together?", options: ["background", "backdrop", "fill", "surface"], correctIndex: 0 },
-    { question: "Which property adds a drop shadow to an element's box (not its text)?", options: ["text-shadow", "box-shadow", "filter: shadow", "outline-shadow"], correctIndex: 1 },
-    { question: "Which property controls the space between lines of text within an element?", options: ["letter-spacing", "line-height", "word-spacing", "text-indent"], correctIndex: 1 },
-    { question: "Which value of `text-align` centers inline/text content within its container?", options: ["middle", "center", "justify", "inherit"], correctIndex: 1 },
-    { question: "Which CSS property is used to animate a property's change smoothly over time in response to a state change (like `:hover`)?", options: ["animation", "transition", "transform", "keyframes"], correctIndex: 1 },
-    { question: "Which @-rule lets you apply different styles depending on the viewport width (responsive design)?", options: ["@supports", "@media", "@font-face", "@keyframes"], correctIndex: 1 },
-    { question: "In a `transition: all 0.3s ease;` declaration, what does `0.3s` specify?", options: ["Delay before the transition starts", "The duration of the transition", "The number of times it repeats", "The easing curve"], correctIndex: 1 }
+    // Topic 1: Selectors & specificity (7)
+    { question: "What kind of selector is `p { }`?", options: ["Type selector", "Class selector", "ID selector", "Universal selector"], correctIndex: 0 },
+    { question: "Which selector matches an element with `class=\"link\"`?", options: [".link", "#link", "link", "*link"], correctIndex: 0 },
+    { question: "Which selector matches the one element with `id=\"menu\"`?", options: [".menu", "#menu", "menu", "[menu]"], correctIndex: 1 },
+    { question: "In `#menu > li`, which `li` elements are matched, compared to `#menu li`?", options: ["Every `li` nested anywhere inside #menu, same as `#menu li`", "Only `li` elements that are direct children of #menu, not deeper descendants", "Only the first `li` inside #menu", "`li` elements that come right after #menu in the markup"], correctIndex: 1 },
+    { question: "In specificity scoring, how many points does an ID selector (e.g. `#menu`) contribute?", options: ["1", "10", "100", "1000"], correctIndex: 2 },
+    { question: "Two CSS rules have exactly the same specificity and both match the same element. Which one wins?", options: ["The one written first in the stylesheet", "The one with the longer selector", "The one written later in the stylesheet", "Neither applies -- the browser default is used"], correctIndex: 2 },
+    { question: "What overrides a rule regardless of specificity, even an ID selector?", options: ["Writing the selector in capital letters", "Adding `!important` to the declaration", "Using `*` in the selector", "Putting the rule at the top of the file"], correctIndex: 1 },
+
+    // Topic 2: Fonts, backgrounds, borders (7)
+    { question: "Which property sets which typeface text uses, with a comma-separated fallback list?", options: ["text-align", "font-family", "font-weight", "color"], correctIndex: 1 },
+    { question: "A font-size is set using `em`. What is that value relative to?", options: ["The viewport width", "The element's own previously computed size", "The font size of the parent element", "The screen's pixel density"], correctIndex: 2 },
+    { question: "Which `text-decoration` value is commonly used to remove the default underline from a link?", options: ["overline", "underline", "line-through", "none"], correctIndex: 3 },
+    { question: "Which `text-align` value stretches every line except the last to fill the full width, like a newspaper column?", options: ["center", "justify", "right", "stretch"], correctIndex: 1 },
+    { question: "By default, how does `background-image` fill an element's box?", options: ["It shows once, centered", "It repeats (tiles) to fill the whole box", "It stretches to exactly fit the box", "It only shows in the bottom-right corner"], correctIndex: 1 },
+    { question: "Which property controls whether a background image repeats horizontally, vertically, both, or not at all?", options: ["background-position", "background-size", "background-repeat", "background-attachment"], correctIndex: 2 },
+    { question: "Which pair of `border-style` values specifically make a border look pressed-in or raised using light/shadow shading?", options: ["solid and dashed", "dotted and double", "inset and outset", "none and hidden"], correctIndex: 2 },
+
+    // Topic 3: The box model (6)
+    { question: "In the box model, where does `padding` sit?", options: ["Outside the border, between the element and its neighbors", "Between the content and the border", "Between two sibling elements only", "Behind the margin"], correctIndex: 1 },
+    { question: "What does `margin` do?", options: ["Adds transparent space outside the border, between the element and its neighbors", "Adds space inside the border, around the content", "Sets the element's background color", "Draws a visible line around the element"], correctIndex: 0 },
+    { question: "With the default `box-sizing: content-box`, `width: 200px`, `padding: 20px` on all sides, and `border-width: 8px` on all sides -- how wide does the box actually render?", options: ["200px", "240px", "256px", "216px"], correctIndex: 2 },
+    { question: "What does `box-sizing: border-box` change about how `width` is interpreted?", options: ["Width now excludes padding and border (same as content-box)", "Width now includes padding and border, so the box stays exactly that wide", "Width is ignored completely", "Width becomes a percentage automatically"], correctIndex: 1 },
+    { question: "In the two-value shorthand `margin: 10px 40px;`, what do the two values mean?", options: ["Top/bottom get 10px, left/right get 40px", "Left/right get 10px, top/bottom get 40px", "All four sides alternate 10px then 40px", "10px is the border and 40px is the margin"], correctIndex: 0 },
+    { question: "How do you horizontally center a block element that has a fixed `width`, using only margin?", options: ["margin: center;", "margin: 0 auto;", "text-align: center; on the element itself", "float: center;"], correctIndex: 1 },
+
+    // Topic 4: Positioning & z-index (6)
+    { question: "With the default `position: static`, do `top` and `left` have any effect on the element?", options: ["Yes, they move it freely", "No -- static elements ignore top/left and stay in normal flow", "Only `top` works, not `left`", "They swap the element with its sibling"], correctIndex: 1 },
+    { question: "Which `position` value removes an element from the normal flow, with `top`/`left` measured from its nearest positioned ancestor?", options: ["static", "relative", "absolute", "inherit"], correctIndex: 2 },
+    { question: "An element has `position: relative` with no `top`/`left` set at all. Why is this commonly done?", options: ["To remove the element from the page entirely", "To make it the positioned ancestor that an absolutely positioned child will be measured from", "To force a line break before it", "It has no effect and is never useful"], correctIndex: 1 },
+    { question: "If no ancestor of an absolutely positioned element has a non-static `position`, what is it positioned relative to?", options: ["Its immediate parent, always", "The nearest scrollable ancestor", "The initial containing block (roughly the page/viewport)", "It isn't rendered at all"], correctIndex: 2 },
+    { question: "Element A has `z-index: 1`. Element B overlaps it with the default `z-index: auto`. Which one appears on top?", options: ["Element B, since z-index: auto beats any number", "Element A, since it has the higher stacking value", "Whichever has the taller height", "It's undefined and varies by browser"], correctIndex: 1 },
+    { question: "What is `position: fixed` measured relative to, so the element stays put even as the page scrolls?", options: ["Its parent element", "The nearest positioned ancestor", "The viewport", "The element directly above it in the HTML"], correctIndex: 2 },
+
+    // Topic 5: Float & clear (4)
+    { question: "What happens to text that follows a `float: left` element?", options: ["It disappears from the page", "It wraps around the right side of the floated element", "It moves below the floated element", "It overlaps the floated element exactly"], correctIndex: 1 },
+    { question: "What does `clear: both` do to an element?", options: ["Removes all of its margin and padding", "Moves it below any floated elements on either side", "Makes its background transparent", "Hides any floated siblings"], correctIndex: 1 },
+    { question: "A container's only children are floated elements, with nothing else inside it. What happens to the container's height by default?", options: ["It grows normally to fit the floats", "It collapses to near-zero height, since floats are taken out of normal flow", "It automatically gets a scrollbar", "It matches the tallest floated child exactly"], correctIndex: 1 },
+    { question: "What is a standard fix for a container collapsing around only its floated children?", options: ["Add `float: none` to the container itself", "Set `overflow` to something other than `visible` (e.g. `hidden`) on the container", "Delete the floated children", "Add `display: none` to the container"], correctIndex: 1 },
+
+    // Topic 6: Display, visibility & overflow (5)
+    { question: "Which `display` value causes `width` and `height` to be ignored on that element?", options: ["block", "inline-block", "inline", "flex"], correctIndex: 2 },
+    { question: "What's the key difference between `display: none` and `visibility: hidden`?", options: ["They behave identically", "display: none keeps its space reserved; visibility: hidden removes the space", "visibility: hidden keeps its space reserved; display: none removes it from the layout entirely", "Neither one affects layout at all"], correctIndex: 2 },
+    { question: "An element has `opacity: 0`. Does it still take up space in the page layout?", options: ["No, it's removed from layout like display: none", "Yes -- it's just fully transparent, its space is unchanged", "It becomes `position: absolute` automatically", "This is invalid CSS and is ignored"], correctIndex: 1 },
+    { question: "Which `overflow` value shows scrollbars only when the content actually doesn't fit the box?", options: ["visible", "hidden", "scroll", "auto"], correctIndex: 3 },
+    { question: "Which property keeps text on a single line instead of wrapping onto multiple lines?", options: ["overflow: hidden;", "white-space: nowrap;", "text-align: justify;", "display: inline;"], correctIndex: 1 }
   ];
 
   var TOTAL = QUESTIONS.length;
@@ -474,7 +485,7 @@
     }
   });
 
-  subtitle.textContent = TOTAL + " questions on CSS fundamentals.";
+  subtitle.textContent = TOTAL + " questions on selectors & specificity, fonts/backgrounds/borders, the box model, positioning & z-index, float & clear, and display/visibility/overflow.";
   renderQuestion();
 })();
 </script>

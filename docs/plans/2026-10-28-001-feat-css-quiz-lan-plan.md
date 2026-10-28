@@ -84,16 +84,13 @@ User wants a classroom/group-style quiz: one person (host) runs it from their ma
 
 **Approach:**
 - Represent each question as `{ question: string, options: [string, string, string, string], correctIndex: 0-3 }` in a JS array named e.g. `QUESTIONS`.
-- Distribute the 35 questions across CSS topic areas so no single topic dominates, roughly:
-  - Selectors & specificity (basic, combinators, pseudo-classes/elements) — ~6
-  - Box model (margin/border/padding/box-sizing) — ~5
-  - Positioning & stacking (`position`, `z-index`, `float`) — ~4
-  - Flexbox — ~5
-  - Grid — ~4
-  - Units & values (`em`/`rem`/`%`/`vh`/`vw`, `calc()`) — ~4
-  - Colors, backgrounds, borders/shadows — ~3
-  - Typography (`font`, `text-*`, `line-height`) — ~2
-  - Transitions/animations & responsive design (media queries) — ~2
+- Distribute the 35 questions across exactly the topics covered by the course's "CSS Style Lab" reference page, so no single topic dominates and nothing outside the taught syllabus (e.g. flexbox, grid, transitions, media queries) is tested:
+  - Selectors & specificity (type/class/ID selectors, child combinator, specificity scoring, tie-breaking, `!important`) — 7
+  - Fonts, backgrounds, borders (font-family/em, text-decoration/text-align, background-image/background-repeat, border-style shading) — 7
+  - The box model (padding vs. margin, box-sizing math, margin shorthand, centering with margin) — 6
+  - Positioning & z-index (`static`/`relative`/`absolute`/`fixed`, positioned-ancestor anchoring, `z-index` stacking) — 6
+  - Float & clear (text wrap, `clear: both`, container collapse, the overflow fix) — 4
+  - Display, visibility & overflow (`display` values, `display: none` vs. `visibility: hidden` vs. `opacity: 0`, `overflow: auto`, `white-space: nowrap`) — 5
 - Keep each question's distractors plausible (no obviously-wrong filler options) so the quiz has real difficulty.
 
 **Patterns to follow:**
