@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSS Quiz — Results</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+    --accent: #38bdf8;
+    --correct: #22c55e;
+    --incorrect: #ef4444;
+    --border: #334155;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    padding-block: 24px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+  }
+
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 16px;
+  }
+
+  h1 {
+    font-size: 1.4rem;
+    margin: 0 0 4px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    margin: 0 0 20px;
+    font-size: 0.9rem;
+  }
+
+  .toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .summary {
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+
+  button {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    cursor: pointer;
+    min-height: 40px;
+  }
+
+  button:hover {
+    border-color: var(--accent);
+  }
+
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.92rem;
+  }
+
+  th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  tr.result-row {
+    cursor: pointer;
+  }
+
+  tr.result-row:hover {
+    background: rgba(56, 189, 248, 0.06);
+  }
+
+  .pct {
+    font-weight: 700;
+  }
+
+  .pct.high { color: var(--correct); }
+  .pct.low { color: var(--incorrect); }
+
+  .detail-row td {
+    background: rgba(0, 0, 0, 0.15);
+    padding: 14px;
+  }
+
+  .review-item {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+
+  .review-q {
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-size: 0.9rem;
+  }
+
+  .review-line {
+    font-size: 0.85rem;
+    margin: 2px 0;
+  }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+  }
+
+  .tag.correct {
+    background: rgba(34, 197, 94, 0.15);
+    color: var(--correct);
+  }
+
+  .tag.incorrect {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--incorrect);
+  }
+
+  pre.code-block {
+    margin: 4px 0;
+    padding: 6px 9px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.82rem;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .empty, .error {
+    padding: 24px;
+    color: var(--muted);
+    text-align: center;
+  }
+
+  .error { color: var(--incorrect); }
+
+  [hidden] { display: none !important; }
+
+  @media (max-width: 560px) {
+    th, td { padding: 8px 10px; font-size: 0.85rem; }
+    th:nth-child(4), td:nth-child(4) { display: none; } /* hide timestamp column on phones */
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CSS Quiz — Results</h1>
+  <p class="subtitle">Live submissions from this server's data/results.json. Unauthenticated -- anyone on this LAN who opens this page can see it.</p>
+
+  <div class="toolbar">
+    <span class="summary" id="summary"></span>
+    <button id="refresh-btn" type="button">Refresh</button>
+  </div>
+
+  <div class="panel">
+    <table id="results-table" hidden>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Score</th>
+          <th>%</th>
+          <th>Submitted</th>
+        </tr>
+      </thead>
+      <tbody id="results-body"></tbody>
+    </table>
+    <p class="empty" id="empty-msg" hidden>No submissions yet.</p>
+    <p class="error" id="error-msg" hidden></p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var table = document.getElementById("results-table");
+  var tbody = document.getElementById("results-body");
+  var emptyMsg = document.getElementById("empty-msg");
+  var errorMsg = document.getElementById("error-msg");
+  var summary = document.getElementById("summary");
+  var refreshBtn = document.getElementById("refresh-btn");
+
+  function fmtTime(iso) {
+    try {
+      var d = new Date(iso);
+      return d.toLocaleString();
+    } catch (e) {
+      return iso;
+    }
+  }
+
+  function buildDetailRow(record) {
+    var tr = document.createElement("tr");
+    tr.className = "detail-row";
+    var td = document.createElement("td");
+    td.colSpan = 4;
+
+    if (!Array.isArray(record.answers) || record.answers.length === 0) {
+      td.textContent = "No per-question detail was submitted for this result.";
+      tr.appendChild(td);
+      return tr;
+    }
+
+    record.answers.forEach(function (item, i) {
+      var div = document.createElement("div");
+      div.className = "review-item";
+
+      var qLine = document.createElement("div");
+      qLine.className = "review-q";
+      qLine.textContent = (i + 1) + ". " + (item.question || "");
+      div.appendChild(qLine);
+
+      var tag = document.createElement("span");
+      tag.className = "tag " + (item.isCorrect ? "correct" : "incorrect");
+      tag.textContent = item.isCorrect ? "✓ Correct" : "✗ Incorrect";
+
+      var line = document.createElement("div");
+      line.className = "review-line";
+      line.appendChild(tag);
+
+      if (item.type === "code") {
+        td.appendChild(div);
+        div.appendChild(line);
+        var label = document.createElement("span");
+        label.textContent = "Answer:";
+        line.appendChild(label);
+        var code = document.createElement("pre");
+        code.className = "code-block";
+        code.textContent = item.yourAnswer && String(item.yourAnswer).trim() ? item.yourAnswer : "(blank)";
+        div.appendChild(code);
+      } else {
+        var text = document.createElement("span");
+        text.textContent = "Answer: " + (item.yourAnswer == null ? "(blank)" : item.yourAnswer);
+        line.appendChild(text);
+        div.appendChild(line);
+      }
+
+      td.appendChild(div);
+    });
+
+    tr.appendChild(td);
+    return tr;
+  }
+
+  function render(results) {
+    tbody.innerHTML = "";
+
+    if (results.length === 0) {
+      table.hidden = true;
+      emptyMsg.hidden = false;
+      summary.textContent = "0 submissions";
+      return;
+    }
+
+    emptyMsg.hidden = true;
+    table.hidden = false;
+
+    var totalPct = 0;
+    results.forEach(function (record) {
+      var pct = record.total > 0 ? Math.round((record.score / record.total) * 100) : 0;
+      totalPct += pct;
+
+      var row = document.createElement("tr");
+      row.className = "result-row";
+
+      var nameCell = document.createElement("td");
+      nameCell.textContent = record.name || "(no name)";
+      row.appendChild(nameCell);
+
+      var scoreCell = document.createElement("td");
+      scoreCell.textContent = record.score + " / " + record.total;
+      row.appendChild(scoreCell);
+
+      var pctCell = document.createElement("td");
+      pctCell.className = "pct " + (pct >= 70 ? "high" : pct < 50 ? "low" : "");
+      pctCell.textContent = pct + "%";
+      row.appendChild(pctCell);
+
+      var timeCell = document.createElement("td");
+      timeCell.textContent = fmtTime(record.submittedAt);
+      row.appendChild(timeCell);
+
+      var detailRow = buildDetailRow(record);
+      detailRow.hidden = true;
+
+      row.addEventListener("click", function () {
+        detailRow.hidden = !detailRow.hidden;
+      });
+
+      tbody.appendChild(row);
+      tbody.appendChild(detailRow);
+    });
+
+    var avg = Math.round(totalPct / results.length);
+    summary.textContent = results.length + " submission" + (results.length === 1 ? "" : "s") + " · average " + avg + "% · click a row for detail";
+  }
+
+  function load() {
+    errorMsg.hidden = true;
+    fetch("/api/results")
+      .then(function (res) {
+        if (!res.ok) throw new Error("Server responded with " + res.status);
+        return res.json();
+      })
+      .then(render)
+      .catch(function (err) {
+        table.hidden = true;
+        emptyMsg.hidden = true;
+        errorMsg.hidden = false;
+        errorMsg.textContent = "Could not load results: " + err.message + ". Is server.js running (not just a static file server)?";
+      });
+  }
+
+  refreshBtn.addEventListener("click", load);
+  load();
+})();
+</script>
+</body>
+</html>

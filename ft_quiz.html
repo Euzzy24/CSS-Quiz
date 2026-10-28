@@ -156,8 +156,17 @@
 
   .score-sub {
     color: var(--muted);
-    margin: 0 0 20px;
+    margin: 0 0 8px;
   }
+
+  .save-status {
+    font-size: 0.82rem;
+    margin: 0 0 20px;
+    color: var(--muted);
+  }
+
+  .save-status.ok { color: var(--correct); }
+  .save-status.fail { color: var(--incorrect); }
 
   .review-item {
     border: 1px solid var(--border);
@@ -329,6 +338,7 @@
     <div id="results-view" hidden>
       <p class="score-headline" id="score-headline"></p>
       <p class="score-sub" id="score-sub"></p>
+      <p class="save-status" id="save-status"></p>
       <div id="review-list"></div>
       <button id="retake-btn" class="primary" type="button">Retake Quiz</button>
     </div>
@@ -431,6 +441,7 @@
   var unansweredWarning = document.getElementById("unanswered-warning");
   var scoreHeadline = document.getElementById("score-headline");
   var scoreSub = document.getElementById("score-sub");
+  var saveStatus = document.getElementById("save-status");
   var reviewList = document.getElementById("review-list");
   var retakeBtn = document.getElementById("retake-btn");
 
@@ -558,6 +569,31 @@
     return q.patterns.some(function (pattern) { return pattern.test(normalized); });
   }
 
+  // Best-effort save to the server's results database (see server.js /
+  // data/results.json). This never blocks or hides the locally-computed
+  // results screen -- if the save fails (e.g. the host is running a plain
+  // static file server instead of server.js), the student still sees their
+  // score, just with a note that it wasn't recorded for the teacher.
+  function saveResult(score, breakdown) {
+    saveStatus.className = "save-status";
+    saveStatus.textContent = "Saving result...";
+
+    fetch("/api/results", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: studentName, score: score, total: TOTAL, answers: breakdown })
+    })
+      .then(function (res) {
+        if (!res.ok) throw new Error("server responded " + res.status);
+        saveStatus.className = "save-status ok";
+        saveStatus.textContent = "Result saved for your teacher.";
+      })
+      .catch(function () {
+        saveStatus.className = "save-status fail";
+        saveStatus.textContent = "Could not save your result to the server (is server.js running?). Your score above is still accurate.";
+      });
+  }
+
   function submitQuiz() {
     var missing = findUnanswered();
     if (missing.length > 0) {
@@ -605,6 +641,7 @@
     scoreHeadline.textContent = "Score: " + score + " / " + TOTAL;
     var pct = Math.round((score / TOTAL) * 100);
     scoreSub.textContent = (studentName ? studentName + " -- " : "") + pct + "% correct";
+    saveResult(score, breakdown);
 
     reviewList.innerHTML = "";
     breakdown.forEach(function (item, i) {
@@ -667,6 +704,8 @@
   function retake() {
     answers = {};
     currentIndex = 0;
+    saveStatus.className = "save-status";
+    saveStatus.textContent = "";
     resultsView.hidden = true;
     quizView.hidden = false;
     renderQuestion();

@@ -1,1 +1,4 @@
 .context/
+
+# Student results database (real names + answers) -- never publish this.
+data/
